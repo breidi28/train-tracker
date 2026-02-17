@@ -46,11 +46,13 @@ export default function TrainDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(0);
 
   const load = async () => {
     try {
       const data = await fetchTrain(id ?? '');
       setTrain(data);
+      setSelectedBranch(0);
       setError('');
     } catch (e: any) {
       const msg = e?.response?.data?.error ?? e.message ?? 'Eroare';
@@ -67,7 +69,10 @@ export default function TrainDetailScreen() {
   useEffect(() => { load(); }, [id]);
   const onRefresh = () => { setRefreshing(true); load(); };
 
-  const stops: Stop[] = train?.stops ?? train?.stations ?? train?.route?.stations ?? [];
+  const branches: { label: string; stations_data: Stop[] }[] = train?.branches ?? [];
+  const stops: Stop[] = branches.length > 0
+    ? (branches[selectedBranch]?.stations_data ?? [])
+    : (train?.stops ?? train?.stations ?? train?.route?.stations ?? []);
   const trainNumber = train?.train_number ?? train?.trainNumber ?? id ?? '';
   const route = train?.route_name ?? train?.route ?? '';
   const operator = train?.operator ?? 'CFR Călători';
@@ -128,6 +133,30 @@ export default function TrainDetailScreen() {
               <Text className="text-xs text-gray-400 mt-1">{operator}</Text>
             </View>
           </View>
+
+          {/* Branch selector (only shown when there are multiple branches) */}
+          {branches.length > 1 && (
+            <View className="bg-white mt-1 px-4 pt-3 pb-1">
+              <Text className="text-xs text-gray-400 uppercase mb-2">Selectează ruta</Text>
+              <View className="flex-row flex-wrap gap-2">
+                {branches.map((b, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => setSelectedBranch(i)}
+                    className={`rounded-full px-3 py-1.5 border ${
+                      selectedBranch === i
+                        ? 'bg-primary border-primary'
+                        : 'bg-white border-gray-300'
+                    }`}
+                  >
+                    <Text className={`text-xs font-medium ${
+                      selectedBranch === i ? 'text-white' : 'text-gray-600'
+                    }`}>{b.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* Stops */}
           <View className="bg-white mt-1 px-4 py-4">
