@@ -142,6 +142,7 @@ export default function TrainDetailScreen() {
                 {branches.map((b, i) => (
                   <TouchableOpacity
                     key={i}
+                    activeOpacity={1}
                     onPress={() => setSelectedBranch(i)}
                     className={`rounded-full px-3 py-1.5 border ${
                       selectedBranch === i

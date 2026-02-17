@@ -146,6 +146,7 @@ export default function StationDetailScreen() {
         {/* Tab switcher */}
         <View className="flex-row mx-4 mt-3 border-b border-gray-200">
           <TouchableOpacity
+            activeOpacity={1}
             className={`flex-1 py-3 items-center flex-row justify-center ${tab === 'departures' ? 'border-b-2 border-blue-600' : ''}`}
             onPress={() => setTab('departures')}
           >
@@ -158,6 +159,7 @@ export default function StationDetailScreen() {
             )}
           </TouchableOpacity>
           <TouchableOpacity
+            activeOpacity={1}
             className={`flex-1 py-3 items-center flex-row justify-center ${tab === 'arrivals' ? 'border-b-2 border-blue-600' : ''}`}
             onPress={() => setTab('arrivals')}
           >
