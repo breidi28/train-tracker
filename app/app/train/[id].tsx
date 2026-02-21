@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   View, Text, ScrollView, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Modal, Alert, TextInput
+  TouchableOpacity, RefreshControl, Modal, Alert, TextInput, Share
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
@@ -13,7 +13,11 @@ import { useRouter } from 'expo-router';
 import {
   isTrainWatched, addWatchedTrain, removeWatchedTrain, requestNotificationPermission,
 } from '../../src/notifications';
-import { recordRecentSearch, getDelayHistory, type DelaySnapshot } from '../../src/storage';
+import {
+  recordRecentSearch, getDelayHistory, type DelaySnapshot,
+  getFavoriteTrains, toggleFavoriteTrain,
+  getMapRouteCache, saveMapRouteCache,
+} from '../../src/storage';
 import { useTheme } from '../../src/ThemeContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -23,6 +27,7 @@ interface Stop {
   departure_time?: string; departureTime?: string;
   delay?: number; delay_minutes?: number;
   platform?: string; km?: number; observations?: string;
+  dwell_minutes?: number;
 }
 
 interface Report {
@@ -40,6 +45,24 @@ function isTimePast(timeStr: string | undefined): boolean {
   const [hours, minutes] = timeStr.split(':').map(Number);
   const itemMinutes = hours * 60 + minutes;
   return itemMinutes < currentMinutes;
+}
+
+/** Parse "HH:MM" into total minutes from midnight */
+function timeToMinutes(t: string | undefined): number | null {
+  if (!t) return null;
+  const parts = t.split(':').map(Number);
+  if (parts.length < 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
+  return parts[0] * 60 + parts[1];
+}
+
+/** Compute dwell time in minutes between arrival and departure */
+function calcDwell(arr: string | undefined, dep: string | undefined): number {
+  const a = timeToMinutes(arr);
+  const d = timeToMinutes(dep);
+  if (a === null || d === null) return 0;
+  let diff = d - a;
+  if (diff < 0) diff += 24 * 60; // midnight crossing
+  return diff;
 }
 function formatDelay(min: number | null | undefined): string {
   if (!min || min === 0) return 'La timp';
@@ -136,6 +159,7 @@ export default function TrainDetailScreen() {
   const [mapHtml, setMapHtml] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const webviewRef = useRef<WebView>(null);
+  const mapCacheKeyRef = useRef<string>('');
 
   // Notification state
   const [watching, setWatching] = useState(false);
@@ -144,12 +168,16 @@ export default function TrainDetailScreen() {
   // Delay history
   const [delayHistory, setDelayHistory] = useState<DelaySnapshot[]>([]);
 
+  // Favorite toggle
+  const [isFavorite, setIsFavorite] = useState(false);
+
   // Reports
   const [reports, setReports] = useState<Report[]>([]);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportType, setReportType] = useState('aglomerat');
   const [reportMessage, setReportMessage] = useState('');
   const [reportLoading, setReportLoading] = useState(false);
+  const [showReports, setShowReports] = useState(false);
 
   const load = async () => {
     try {
@@ -186,6 +214,11 @@ export default function TrainDetailScreen() {
       searchedAt: new Date().toISOString(),
     });
     getDelayHistory(trainNum).then(setDelayHistory);
+
+    // Check if favorited
+    getFavoriteTrains().then(favs => {
+      setIsFavorite(!!favs.find(f => f.id === trainNum));
+    });
   }, [train]);
 
   // Check watching status
@@ -194,7 +227,7 @@ export default function TrainDetailScreen() {
     isTrainWatched(id).then(setWatching);
   }, [id]);
 
-  // Rebuild map HTML
+  // Rebuild map HTML (with AsyncStorage cache for rail path)
   useEffect(() => {
     if (!train) return;
     const bs: { label: string; stations_data: Stop[] }[] = train?.branches ?? [];
@@ -203,7 +236,11 @@ export default function TrainDetailScreen() {
       : (train?.stops ?? train?.stations ?? []);
     const names = ss.map((s) => ({ name: s.station_name ?? s.stationName ?? '' })).filter(s => s.name);
     if (!names.length) return;
-    setMapHtml(buildLeafletHtml(names));
+    const fingerprint = names.map(n => n.name).join('~');
+    mapCacheKeyRef.current = fingerprint;
+    getMapRouteCache(fingerprint).then(cached => {
+      setMapHtml(buildLeafletHtml(names, cached));
+    });
   }, [train, selectedBranch]);
 
   // GPS for map
@@ -251,6 +288,22 @@ export default function TrainDetailScreen() {
     } finally {
       setNotifLoading(false);
     }
+  };
+
+  const handleToggleFavorite = async () => {
+    const isNowFav = await toggleFavoriteTrain({
+      id: trainNumber,
+      label: route,
+    });
+    setIsFavorite(isNowFav);
+  };
+
+  const handleShare = async () => {
+    try {
+      const waitTime = train?.delay && train.delay > 0 ? ` (+${train.delay} min întârziere)` : ' (La timp)';
+      const msg = `Urmărește trenul ${trainNumber} (${route}) pe Train Tracker!${waitTime}\nhttps://cfr.ro/train/${encodeURIComponent(trainNumber)}`;
+      await Share.share({ message: msg });
+    } catch { }
   };
 
   const submitReport = async () => {
@@ -333,12 +386,17 @@ export default function TrainDetailScreen() {
 
           {/* ── Header ────────────────────────────────────────────────── */}
           <View className={`border-b px-4 py-4 flex-row items-center ${card}`}>
-            <View style={{ backgroundColor: badgeBg(trainNumber) }} className="rounded-lg px-3 py-1.5">
+            <View
+              style={{ backgroundColor: badgeBg(trainNumber) }}
+              className="rounded-lg px-3 py-1.5"
+            >
               <Text className="text-white font-bold text-base">{trainNumber}</Text>
             </View>
-            <View className="flex-1 ml-3">
-              <Text className={`text-base font-semibold ${headText}`}>{route}</Text>
-              <Text className={`text-xs mt-1 ${subText}`}>{operator}</Text>
+            <View className="flex-1 ml-3 justify-center">
+              {!!route && (
+                <Text className={`text-base font-semibold ${headText}`} numberOfLines={1}>{route}</Text>
+              )}
+              <Text className={`text-xs ${subText}`} style={{ marginTop: route ? 2 : 0 }}>{operator}</Text>
             </View>
             {/* Bell */}
             <TouchableOpacity onPress={handleToggleNotification} disabled={notifLoading} className="p-2" activeOpacity={0.7}>
@@ -350,6 +408,14 @@ export default function TrainDetailScreen() {
                   color={watching ? '#F59E0B' : '#0066CC'}
                 />
               }
+            </TouchableOpacity>
+            {/* Favorite */}
+            <TouchableOpacity onPress={handleToggleFavorite} className="p-2 ml-1" activeOpacity={0.7}>
+              <Ionicons name={isFavorite ? "star" : "star-outline"} size={22} color={isFavorite ? '#F59E0B' : '#0066CC'} />
+            </TouchableOpacity>
+            {/* Share */}
+            <TouchableOpacity onPress={handleShare} className="p-2 ml-1" activeOpacity={0.7}>
+              <Ionicons name="share-outline" size={22} color="#0066CC" />
             </TouchableOpacity>
             {/* Map */}
             <TouchableOpacity onPress={() => setShowMap(true)} className="p-2 ml-1" activeOpacity={0.7}>
@@ -398,35 +464,60 @@ export default function TrainDetailScreen() {
             </View>
           )}
 
-          {/* ── Reports (Feature 6) ───────────────────────────────────── */}
-          <View className={`mt-3 mx-4 border rounded-2xl px-4 py-4 ${card}`}>
-            <View className="flex-row items-center justify-between mb-4">
+          {/* ── Reports (collapsible) ─────────────────────────────── */}
+          <View className={`mt-3 mx-4 border rounded-2xl ${card}`}>
+            <TouchableOpacity
+              onPress={() => setShowReports(v => !v)}
+              activeOpacity={0.7}
+              className="flex-row items-center justify-between px-4 py-4"
+            >
               <View className="flex-row items-center">
                 <Ionicons name="chatbubbles" size={16} color="#0066CC" />
                 <Text className={`text-xs font-bold tracking-widest ml-2 ${subText}`}>RAPOARTE CĂLĂTORI</Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowReportModal(true)} activeOpacity={0.7} className="bg-primary rounded-lg px-3 py-1.5 flex-row items-center">
-                <Ionicons name="add" size={14} color="#fff" />
-                <Text className="text-white text-xs font-bold ml-1">ADAUGĂ</Text>
-              </TouchableOpacity>
-            </View>
-
-            {reports.length === 0 ? (
-              <Text className={`text-center py-4 ${subText}`}>Trenul nu are niciun raport momentan.</Text>
-            ) : (
-              reports.map((rep, i) => (
-                <View key={i} className={`py-3 ${i < reports.length - 1 ? `border-b ${divider}` : ''}`}>
-                  <View className="flex-row items-center mb-1">
-                    <View className="bg-gray-200 dark:bg-gray-800 rounded px-2 py-0.5 mr-2">
-                      <Text className={`text-xs font-bold uppercase ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{rep.report_type.replace('_', ' ')}</Text>
-                    </View>
-                    <Text className={`text-xs ${subText}`}>{rep.reported_at?.slice(11, 16) ?? 'Acum'}</Text>
+                {reports.length > 0 && (
+                  <View className="ml-2 bg-blue-600 rounded-full w-5 h-5 items-center justify-center">
+                    <Text className="text-white text-[10px] font-bold">{reports.length}</Text>
                   </View>
-                  {rep.message ? <Text className={`text-sm ${headText}`}>{rep.message}</Text> : null}
-                </View>
-              ))
+                )}
+              </View>
+              <View className="flex-row items-center gap-3">
+                <TouchableOpacity
+                  onPress={() => setShowReportModal(true)}
+                  activeOpacity={0.7}
+                  className="bg-primary rounded-lg px-3 py-1.5 flex-row items-center"
+                >
+                  <Ionicons name="add" size={14} color="#fff" />
+                  <Text className="text-white text-xs font-bold ml-1">ADAUGĂ</Text>
+                </TouchableOpacity>
+                <Ionicons
+                  name={showReports ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={dark ? '#6B7280' : '#9CA3AF'}
+                />
+              </View>
+            </TouchableOpacity>
+
+            {showReports && (
+              <View className={`px-4 pb-4 border-t ${divider}`}>
+                {reports.length === 0 ? (
+                  <Text className={`text-center py-4 ${subText}`}>Trenul nu are niciun raport momentan.</Text>
+                ) : (
+                  reports.map((rep, i) => (
+                    <View key={i} className={`py-3 ${i < reports.length - 1 ? `border-b ${divider}` : ''}`}>
+                      <View className="flex-row items-center mb-1">
+                        <View className="bg-gray-200 dark:bg-gray-800 rounded px-2 py-0.5 mr-2">
+                          <Text className={`text-xs font-bold uppercase ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{rep.report_type.replace('_', ' ')}</Text>
+                        </View>
+                        <Text className={`text-xs ${subText}`}>{rep.reported_at?.slice(11, 16) ?? 'Acum'}</Text>
+                      </View>
+                      {rep.message ? <Text className={`text-sm ${headText}`}>{rep.message}</Text> : null}
+                    </View>
+                  ))
+                )}
+              </View>
             )}
           </View>
+
 
           {/* ── Stops ─────────────────────────────────────────────────── */}
           <View className={`mt-3 mx-4 border rounded-2xl px-4 py-4 ${card}`}>
@@ -440,46 +531,96 @@ export default function TrainDetailScreen() {
               const delay = stop.delay ?? stop.delay_minutes ?? 0;
               const isFirst = i === 0;
               const isLast = i === stops.length - 1;
+
+              // Determine whether this stop has been passed
+              // A stop is "passed" if it has live delay data OR its departure time is in the past
+              const timeForPast = dep || arr;
+              const isPassed = delay !== 0 || isTimePast(timeForPast);
+
+              // Find the "current" stop = first stop NOT yet passed
+              // (We compute this outside the map for efficiency, but doing it inline is fine for small lists)
+              const prevPassed = i > 0 && (stops[i - 1].delay !== 0 || isTimePast(stops[i - 1].departure_time ?? stops[i - 1].departureTime ?? stops[i - 1].arrival_time ?? stops[i - 1].arrivalTime ?? ''));
+              const isCurrent = !isPassed && prevPassed;
+
+              // Dot color and style
+              const dotColor = isPassed ? '#0066CC' : isCurrent ? '#0066CC' : (dark ? '#4B5563' : '#D1D5DB');
+              const dotSize = isFirst || isLast ? 14 : isCurrent ? 13 : 10;
+              const lineColorAbove = isPassed || isCurrent ? '#0066CC' : (dark ? '#374151' : '#E5E7EB');
+              const lineColorBelow = isPassed && !isLast ? '#0066CC' : (dark ? '#374151' : '#E5E7EB');
+
               return (
                 <View key={i} className="flex-row min-h-[52px]">
                   {/* Timeline */}
                   <View className="w-6 items-center">
-                    {!isFirst && <View className={`flex-1 w-0.5 ${dark ? 'bg-gray-700' : 'bg-gray-200'}`} />}
+                    {!isFirst && <View style={{ flex: 1, width: 2, backgroundColor: lineColorAbove }} />}
                     <View
-                      className={`rounded-full ${isFirst || isLast ? 'w-3.5 h-3.5' : 'w-2.5 h-2.5'}`}
-                      style={{ backgroundColor: '#0066CC' }}
+                      style={{
+                        width: dotSize,
+                        height: dotSize,
+                        borderRadius: dotSize / 2,
+                        backgroundColor: isPassed || isCurrent ? dotColor : 'transparent',
+                        borderWidth: isCurrent ? 0 : isPassed ? 0 : 2,
+                        borderColor: dotColor,
+                      }}
                     />
-                    {!isLast && <View className={`flex-1 w-0.5 ${dark ? 'bg-gray-700' : 'bg-gray-200'}`} />}
+                    {!isLast && <View style={{ flex: 1, width: 2, backgroundColor: lineColorBelow }} />}
                   </View>
                   {/* Info */}
                   <View className="flex-1 ml-3 py-2">
-                    <Text className={`text-base font-semibold ${headText}`}>{name}</Text>
-                    <View className="flex-row gap-3 mt-1 flex-wrap">
+                    <View className="flex-row items-center gap-2">
+                      <Text
+                        className={`text-base font-semibold ${isPassed ? (dark ? 'text-gray-300' : 'text-gray-700') : isCurrent ? (dark ? 'text-white' : 'text-gray-900') : (dark ? 'text-gray-500' : 'text-gray-400')}`}
+                      >
+                        {name}
+                      </Text>
+                      {isCurrent && (
+                        <View className="bg-blue-600 rounded-full px-2 py-0.5">
+                          <Text className="text-white text-[10px] font-bold">URMEAZĂ</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View className="flex-row gap-3 mt-1 flex-wrap items-center">
                       {arr ? <Text className={`text-xs ${subText}`}>Arr: {arr}</Text> : null}
                       {dep ? <Text className={`text-xs ${subText}`}>Dep: {dep}</Text> : null}
-                      {(delay !== 0 || hasLive) && (
+                      {/* Only show delay badge for passed stops with live data */}
+                      {isPassed && (delay !== 0 || hasLive) && (
                         <Text className="text-xs font-bold" style={{ color: delayColor(delay) }}>
                           {formatDelay(delay)}
                         </Text>
                       )}
+                      {/* For upcoming stops: show scheduled label instead of 'La timp' */}
+                      {!isPassed && !isCurrent && (dep || arr) && (
+                        <Text className={`text-xs italic ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
+                          programat
+                        </Text>
+                      )}
                     </View>
-                    {stop.platform && <Text className={`text-xs mt-0.5 ${subText}`}>Linia {stop.platform}</Text>}
+                    <View className={`text-xs mt-0.5 flex-row items-center gap-3 flex-wrap`}>
+                      {/* Platform badge */}
+                      {stop.platform && (
+                        <View className={`flex-row items-center rounded-md px-2 py-0.5 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                          <Ionicons name="train-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
+                          <Text className={`text-xs ml-1 font-medium ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Linia {stop.platform}
+                          </Text>
+                        </View>
+                      )}
+                      {/* Dwell time badge — only if > 0 */}
+                      {(() => {
+                        const dwell = stop.dwell_minutes ?? calcDwell(arr, dep);
+                        if (dwell <= 0) return null;
+                        return (
+                          <View className={`flex-row items-center rounded-md px-2 py-0.5 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                            <Ionicons name="time-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
+                            <Text className={`text-xs ml-1 font-medium ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
+                              {dwell} min oprire
+                            </Text>
+                          </View>
+                        );
+                      })()}
+                    </View>
                     {stop.observations && <Text className="text-xs text-yellow-600 mt-0.5 italic">{stop.observations}</Text>}
 
-                    {/* Feature 4: Am pierdut trenul */}
-                    {isTimePast(dep) && !isFirst && !isLast && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          // Navigate to search with this station as origin
-                          router.push(`/search?q=${encodeURIComponent(name)}`);
-                        }}
-                        activeOpacity={0.7}
-                        className="mt-2 bg-red-50 dark:bg-red-900/30 self-start border border-red-200 dark:border-red-800/50 rounded-lg px-2.5 py-1.5 flex-row items-center"
-                      >
-                        <Ionicons name="warning-outline" size={14} color="#DC2626" />
-                        <Text className="text-red-600 dark:text-red-400 text-xs font-bold ml-1.5">Am pierdut trenul</Text>
-                      </TouchableOpacity>
-                    )}
                   </View>
                 </View>
               );
@@ -512,6 +653,14 @@ export default function TrainDetailScreen() {
               style={{ flex: 1 }}
               originWhitelist={['*']}
               javaScriptEnabled domStorageEnabled geolocationEnabled
+              onMessage={(event) => {
+                try {
+                  const msg = JSON.parse(event.nativeEvent.data);
+                  if (msg.type === 'railPath' && msg.path && mapCacheKeyRef.current) {
+                    saveMapRouteCache(mapCacheKeyRef.current, msg.path);
+                  }
+                } catch { }
+              }}
               onLoad={() => {
                 if (userLocation) {
                   webviewRef.current?.injectJavaScript(

@@ -1,10 +1,15 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 
-// Auto-detect backend URL:
+// ── Set this to your Render URL once deployed ────────────────────────────────
+// Leave empty ('') to use the local dev server auto-detection below.
+const RENDER_API_URL = '';   // e.g. 'https://train-tracker-api.onrender.com'
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Auto-detect backend URL in local dev:
 // On a real device, Expo's debuggerHost gives us the dev machine's IP
-// The Flask backend runs on port 5000 on the same machine
 function getBaseUrl(): string {
+  if (RENDER_API_URL) return RENDER_API_URL;
   const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoGo?.debuggerHost;
   if (debuggerHost) {
     const ip = debuggerHost.split(':')[0];

@@ -36,9 +36,9 @@ function AppShell() {
           headerTitleStyle: { fontWeight: '700' },
         }}
       >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="train/[id]" options={{ title: 'Detalii Tren', headerBackTitle: '' }} />
-        <Stack.Screen name="station/[id]" options={{ title: 'Orar Stație', headerBackTitle: '' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Acasă' }} />
+        <Stack.Screen name="train/[id]" options={{ title: 'Detalii Tren', headerBackTitle: 'Acasă' }} />
+        <Stack.Screen name="station/[id]" options={{ title: 'Orar Stație', headerBackTitle: 'Acasă' }} />
       </Stack>
     </>
   );

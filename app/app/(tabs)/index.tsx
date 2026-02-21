@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  ScrollView, Keyboard,
+  ScrollView, Keyboard, Platform,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { searchTrains } from '../../src/api';
-import { getRecentSearches, clearRecentSearches, type RecentTrain } from '../../src/storage';
+import {
+  getRecentSearches, clearRecentSearches, type RecentTrain,
+  getFavoriteTrains, getFavoriteStations, type FavoriteItem
+} from '../../src/storage';
 import { useTheme } from '../../src/ThemeContext';
 
 // Badge colours per train category
@@ -27,11 +30,15 @@ export default function HomeScreen() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recents, setRecents] = useState<RecentTrain[]>([]);
+  const [favTrains, setFavTrains] = useState<FavoriteItem[]>([]);
+  const [favStations, setFavStations] = useState<FavoriteItem[]>([]);
 
-  // Load recents whenever this tab gains focus
+  // Load recents and favs whenever this tab gains focus
   useFocusEffect(
     useCallback(() => {
       getRecentSearches().then(setRecents);
+      getFavoriteTrains().then(setFavTrains);
+      getFavoriteStations().then(setFavStations);
     }, [])
   );
 
@@ -106,7 +113,17 @@ export default function HomeScreen() {
               </Text>
               <View className="flex-row gap-3">
                 <TextInput
-                  className={`flex-1 border rounded-xl px-4 py-3 text-base ${inputBg}`}
+                  className={`flex-1 border rounded-xl px-4 ${inputBg}`}
+                  style={{
+                    height: 48,
+                    paddingVertical: 0,
+                    textAlignVertical: 'center',
+                    fontSize: 16,
+                    // iOS renders text slightly lower without this:
+                    paddingTop: Platform.OS === 'ios' ? 0 : undefined,
+                    paddingBottom: Platform.OS === 'ios' ? 0 : undefined,
+                    includeFontPadding: false,
+                  } as any}
                   placeholder="Ex: IR 1732"
                   placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
                   value={trainNumber}
@@ -190,6 +207,57 @@ export default function HomeScreen() {
                     {t.routeLabel ? (
                       <Text className={`text-xs mt-0.5 ${labelText}`} numberOfLines={1}>{t.routeLabel}</Text>
                     ) : null}
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={dark ? '#4B5563' : '#D1D5DB'} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ── Favorite Trains ───────────────────────────────────────────── */}
+        {favTrains.length > 0 && (
+          <View className="px-4 mt-5">
+            <View className="flex-row items-center mb-3">
+              <Text className={`text-xs font-bold tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>TRENURI FAVORITE</Text>
+            </View>
+            <View className={`border rounded-2xl overflow-hidden ${card}`}>
+              {favTrains.map((t, i) => (
+                <TouchableOpacity
+                  key={`${t.id}-${i}`}
+                  className={`px-4 py-3 flex-row items-center ${i < favTrains.length - 1 ? `border-b ${dark ? 'border-gray-800' : 'border-gray-100'}` : ''}`}
+                  onPress={() => router.push(`/train/${encodeURIComponent(t.id)}`)}
+                  activeOpacity={0.6}
+                >
+                  <Ionicons name="star" size={16} color="#F59E0B" className="mr-3" />
+                  <View className="flex-1 ml-3">
+                    <Text className={`text-sm font-bold ${headingText}`}>{t.id}</Text>
+                    {t.label ? <Text className={`text-xs mt-0.5 ${labelText}`} numberOfLines={1}>{t.label}</Text> : null}
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={dark ? '#4B5563' : '#D1D5DB'} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ── Favorite Stations ───────────────────────────────────────────── */}
+        {favStations.length > 0 && (
+          <View className="px-4 mt-5">
+            <View className="flex-row items-center mb-3">
+              <Text className={`text-xs font-bold tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>STAȚII FAVORITE</Text>
+            </View>
+            <View className={`border rounded-2xl overflow-hidden ${card}`}>
+              {favStations.map((s, i) => (
+                <TouchableOpacity
+                  key={`${s.id}-${i}`}
+                  className={`px-4 py-3 flex-row items-center ${i < favStations.length - 1 ? `border-b ${dark ? 'border-gray-800' : 'border-gray-100'}` : ''}`}
+                  onPress={() => router.push(`/station/${encodeURIComponent(s.id)}?name=${encodeURIComponent(s.label)}`)}
+                  activeOpacity={0.6}
+                >
+                  <Ionicons name="train" size={16} color="#0066CC" className="mr-3" />
+                  <View className="flex-1 ml-3">
+                    <Text className={`text-sm font-bold ${headingText}`}>{s.label}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color={dark ? '#4B5563' : '#D1D5DB'} />
                 </TouchableOpacity>

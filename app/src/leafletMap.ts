@@ -2,22 +2,49 @@ export interface MapStation {
   name: string;
 }
 
+import { STATION_COORDS } from './stationCoords';
+
 /**
  * Builds a self-contained Leaflet HTML page for a train route.
  *
- * Pipeline:
- *  1. Geocode stations via Nominatim (1 req/s), cache in localStorage.
- *  2. Once all stations are known fetch Overpass railway=rail ways (full
- *     geometry) for the bounding box and build an adjacency graph.
- *  3. Run Dijkstra between each consecutive station pair along the graph
- *     to produce a connected route that follows the real track geometry.
- *  4. Cache the solved path (lat/lon array) in localStorage so the second
- *     open is instant.
+ * Pipeline (progressive):
+ *  1. Pre-resolve stations from embedded lookup (instant).
+ *  2. Render straight-line path immediately so user sees the map.
+ *  3. In background: fetch Overpass railway geometry, run Dijkstra,
+ *     then upgrade the polyline to follow real rail curves.
+ *  4. Cache the solved curved path so revisits are instant.
  *
  * Exposes window.setUserLocation(lat, lon) for the GPS dot.
  */
-export function buildLeafletHtml(stations: MapStation[]): string {
+export function buildLeafletHtml(stations: MapStation[], cachedRailPath?: number[][] | null): string {
   const stationsJson = JSON.stringify(stations);
+  const injectedPathJson = JSON.stringify(cachedRailPath ?? null);
+
+  const normTS = (n: string) =>
+    n.toLowerCase()
+      .replace(/ă/g, 'a').replace(/â/g, 'a').replace(/î/g, 'i')
+      .replace(/ș/g, 's').replace(/ş/g, 's')
+      .replace(/ț/g, 't').replace(/ţ/g, 't')
+      .replace(/[-_]/g, ' ').trim();
+
+  // Pre-resolve stations from the static lookup
+  const preResolved: Record<string, { lat: number; lon: number }> = {};
+  const unresolvedForRegex: string[] = [];
+  for (const s of stations) {
+    const norm = normTS(s.name);
+    if (STATION_COORDS[norm]) {
+      preResolved[s.name] = STATION_COORDS[norm];
+    } else {
+      const stripped = norm.replace(/^(gara |halta |statia )/, '').replace(/ (hc|hm|gr\.?a|gr\.?b|gr a|gr b)$/i, '').trim();
+      if (STATION_COORDS[stripped]) {
+        preResolved[s.name] = STATION_COORDS[stripped];
+      } else {
+        unresolvedForRegex.push(normTS(s.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      }
+    }
+  }
+  const preResolvedJson = JSON.stringify(preResolved);
+  const namesRegex = unresolvedForRegex.join('|');
 
   return `<!DOCTYPE html>
 <html>
@@ -25,7 +52,7 @@ export function buildLeafletHtml(stations: MapStation[]): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#e5e7eb}
@@ -44,9 +71,11 @@ export function buildLeafletHtml(stations: MapStation[]): string {
 <script>
 (function(){
   var STATIONS = ${stationsJson};
+  var NAMES_RX = ${JSON.stringify(namesRegex)};
+
   var map = L.map('map', {zoomControl:true});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '\u00a9 OpenStreetMap', maxZoom: 18
+    attribution: '© OpenStreetMap', maxZoom: 18
   }).addTo(map);
   map.setView([45.9, 24.9], 7);
 
@@ -56,36 +85,46 @@ export function buildLeafletHtml(stations: MapStation[]): string {
     else    { statusEl.className = ''; }
   }
 
-  // ---------- localStorage caches ----------
+  /* ── caches ── */
   var coordCache = {};
-  var ROUTE_FP   = 'rc_path_v4_' + STATIONS.map(function(s){return s.name;}).join('~');
-  var solvedPath = null; // cached solved lat/lon path
+  var _pre = ${preResolvedJson};
+  for (var _k in _pre) { coordCache[_k] = _pre[_k]; }
+
+  var ROUTE_FP = 'rc_path_v6_' + STATIONS.map(function(s){return s.name;}).join('~');
+  var solvedPath = null;
+  var railSolved = false;
+
+  // Inject AsyncStorage-cached rail path if available (instant on revisit)
+  var _injected = ${injectedPathJson};
+  if (_injected && _injected.length > 1) {
+    solvedPath = _injected;
+    railSolved = true;
+  }
 
   try {
     var rc = localStorage.getItem('rc_cfr_v5');
-    if (rc) coordCache = JSON.parse(rc);
+    if (rc) { var parsed = JSON.parse(rc); for (var ck in parsed) { if (!coordCache[ck]) coordCache[ck] = parsed[ck]; } }
     var sp = localStorage.getItem(ROUTE_FP);
-    if (sp) solvedPath = JSON.parse(sp);
+    if (sp) { solvedPath = JSON.parse(sp); railSolved = true; }
   } catch(e) {}
 
   function saveCoords() { try { localStorage.setItem('rc_cfr_v5', JSON.stringify(coordCache)); } catch(e) {} }
   function savePath(p)  { try { localStorage.setItem(ROUTE_FP, JSON.stringify(p)); } catch(e) {} }
 
-  // ---------- layers ----------
+  /* ── layers ── */
   var routeLayer  = L.layerGroup().addTo(map);
   var markerLayer = L.layerGroup().addTo(map);
   var userMarker  = null;
   var markersDrawn = {};
-  var graphFetched = false;
 
-  // ---------- helpers ----------
+  /* ── helpers ── */
   function nk(n) { return n.lat.toFixed(6) + ',' + n.lon.toFixed(6); }
 
   function haversine(a, b) {
     var R = 6371000, rad = Math.PI/180;
     var dLat = (b.lat - a.lat)*rad, dLon = (b.lon - a.lon)*rad;
-    var s = Math.sin(dLat/2), t = Math.sin(dLon/2);
-    var aa = s*s + Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*t*t;
+    var s1 = Math.sin(dLat/2), s2 = Math.sin(dLon/2);
+    var aa = s1*s1 + Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*s2*s2;
     return R * 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1 - aa));
   }
 
@@ -94,17 +133,17 @@ export function buildLeafletHtml(stations: MapStation[]): string {
     return dlat*dlat + dlon*dlon;
   }
 
-  // ---------- draw the solved route polyline ----------
-  function renderPath(path) {
+  function renderPath(path, fit) {
     routeLayer.clearLayers();
     if (!path || path.length < 2) return;
     L.polyline(path, {color:'#0066CC', weight:5, opacity:0.85}).addTo(routeLayer);
-    var b = L.latLngBounds(path);
-    if (userMarker) b.extend(userMarker.getLatLng());
-    map.fitBounds(b, {padding:[32,32]});
+    if (fit) {
+      var b = L.latLngBounds(path);
+      if (userMarker) b.extend(userMarker.getLatLng());
+      map.fitBounds(b, {padding:[32,32]});
+    }
   }
 
-  // ---------- draw station markers ----------
   function drawMarkers() {
     STATIONS.forEach(function(s, i) {
       if (!coordCache[s.name] || markersDrawn[s.name]) return;
@@ -119,11 +158,21 @@ export function buildLeafletHtml(stations: MapStation[]): string {
     });
   }
 
-  // ---------- Dijkstra on the Overpass graph ----------
+  /* ── straight-line path (instant) ── */
+  function buildStraightPath() {
+    var resolved = STATIONS.filter(function(s){ return !!coordCache[s.name]; });
+    if (resolved.length < 2) return;
+    var path = resolved.map(function(s) {
+      return [coordCache[s.name].lat, coordCache[s.name].lon];
+    });
+    solvedPath = path;
+    renderPath(path, true);
+  }
+
+  /* ── Dijkstra on rail graph ── */
   function dijkstra(adj, nodes, startKey, endKey) {
     var dist = {}, prev = {}, visited = {};
     dist[startKey] = 0;
-    // simple min-priority queue (good enough for ~10k nodes)
     var pq = [{k: startKey, d: 0}];
     while (pq.length) {
       pq.sort(function(a,b){ return a.d - b.d; });
@@ -141,18 +190,15 @@ export function buildLeafletHtml(stations: MapStation[]): string {
         }
       }
     }
-    var path = [], cur = endKey;
-    while (cur) { path.unshift(cur); cur = prev[cur]; }
+    var path = [], c = endKey;
+    while (c) { path.unshift(c); c = prev[c]; }
     return (path.length > 1 && path[0] === startKey) ? path : null;
   }
 
-  // ---------- build graph + solve path from Overpass response ----------
-  function solveFromOverpass(data) {
-    setStatus('Se calculează ruta…');
-
-    // Build adjacency graph from all railway ways
+  /* ── build graph from Overpass elements ── */
+  function buildGraph(elements) {
     var nodes = {}, adj = {};
-    (data.elements || []).forEach(function(el) {
+    elements.forEach(function(el) {
       if (el.type !== 'way' || !el.geometry) return;
       var geom = el.geometry;
       for (var i = 0; i < geom.length; i++) {
@@ -160,107 +206,139 @@ export function buildLeafletHtml(stations: MapStation[]): string {
         if (!nodes[k]) { nodes[k] = {lat: geom[i].lat, lon: geom[i].lon}; adj[k] = []; }
         if (i > 0) {
           var pk = nk(geom[i-1]);
-          var d  = haversine(geom[i], geom[i-1]);
-          adj[pk].push({k: k,  d: d});
-          adj[k ].push({k: pk, d: d});
+          var d = haversine(geom[i], geom[i-1]);
+          adj[pk].push({k: k, d: d});
+          adj[k].push({k: pk, d: d});
         }
       }
     });
+    return {nodes: nodes, adj: adj,
+            list: Object.values ? Object.values(nodes) : Object.keys(nodes).map(function(k){ return nodes[k]; })};
+  }
 
-    var nodeList = Object.keys(nodes).map(function(k){ return nodes[k]; });
-
-    // Find the nearest graph node to a given coord
-    function nearest(lat, lon) {
-      var best = null, bestD = Infinity;
-      for (var i = 0; i < nodeList.length; i++) {
-        var d = dist2(nodeList[i], {lat:lat, lon:lon});
-        if (d < bestD) { bestD = d; best = nodeList[i]; }
-      }
-      return best ? nk(best) : null;
+  function nearestInGraph(graph, lat, lon) {
+    var best = null, bestD = Infinity;
+    var list = graph.list;
+    for (var i = 0; i < list.length; i++) {
+      var d = dist2(list[i], {lat:lat, lon:lon});
+      if (d < bestD) { bestD = d; best = list[i]; }
     }
+    return best ? nk(best) : null;
+  }
 
-    // Build the full path: Dijkstra between each adjacent station pair
+  /* ── per-segment rail geometry fetch + Dijkstra ── */
+  var segmentResults = [];   // array of path arrays, one per gap between resolved stations
+  var segmentFetching = false;
+
+  function fetchRailGeometry() {
+    if (segmentFetching) return;
     var resolved = STATIONS.filter(function(s){ return !!coordCache[s.name]; });
-    var fullPath = [];
+    if (resolved.length < 2) return;
+    segmentFetching = true;
+    segmentResults = new Array(resolved.length - 1);
+    var pending = resolved.length - 1;
+
+    function onSegmentDone(index, pathArr) {
+      segmentResults[index] = pathArr;
+      pending--;
+      // Update polyline incrementally — splice in completed segments
+      var fullPath = [];
+      for (var si = 0; si < segmentResults.length; si++) {
+        var seg = segmentResults[si];
+        if (!seg) {
+          // Not done yet — fall back to straight line for this gap
+          var fromPt = [coordCache[resolved[si].name].lat, coordCache[resolved[si].name].lon];
+          var toPt   = [coordCache[resolved[si+1].name].lat, coordCache[resolved[si+1].name].lon];
+          if (fullPath.length === 0 || fullPath[fullPath.length-1][0] !== fromPt[0]) fullPath.push(fromPt);
+          fullPath.push(toPt);
+        } else {
+          seg.forEach(function(pt, idx) {
+            if (idx === 0 && fullPath.length > 0) return;
+            fullPath.push(pt);
+          });
+        }
+      }
+      renderPath(fullPath, false);
+      if (pending === 0) {
+        savePath(fullPath);
+        solvedPath = fullPath;
+        railSolved = true;
+        setStatus(null);
+        // Notify React Native to persist the solved path to AsyncStorage
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({type:'railPath',path:fullPath}));
+        }
+      }
+    }
 
     for (var i = 0; i < resolved.length - 1; i++) {
-      var a = nearest(coordCache[resolved[i  ].name].lat, coordCache[resolved[i  ].name].lon);
-      var b = nearest(coordCache[resolved[i+1].name].lat, coordCache[resolved[i+1].name].lon);
-      if (!a || !b) continue;
-      var seg = dijkstra(adj, nodes, a, b);
-      if (seg) {
-        seg.forEach(function(k, idx) {
-          // Avoid duplicate junction point between segments
-          if (idx === 0 && fullPath.length > 0) return;
-          fullPath.push([nodes[k].lat, nodes[k].lon]);
+      (function(idx) {
+        var aName = resolved[idx].name;
+        var bName = resolved[idx+1].name;
+        var aCoord = coordCache[aName];
+        var bCoord = coordCache[bName];
+        var PAD = 0.08;
+        var minLat = Math.min(aCoord.lat, bCoord.lat) - PAD;
+        var maxLat = Math.max(aCoord.lat, bCoord.lat) + PAD;
+        var minLon = Math.min(aCoord.lon, bCoord.lon) - PAD;
+        var maxLon = Math.max(aCoord.lon, bCoord.lon) + PAD;
+        var bbox = [minLat, minLon, maxLat, maxLon].join(',');
+        var query = '[out:json][timeout:25][bbox:' + bbox + '];'
+                  + 'way["railway"="rail"]["service"!~"siding|yard|spur"];'
+                  + 'out geom;';
+        fetch('https://overpass-api.de/api/interpreter', {
+          method: 'POST',
+          body: 'data=' + encodeURIComponent(query),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          var graph = buildGraph(d.elements || []);
+          if (!graph.list.length) {
+            onSegmentDone(idx, [[aCoord.lat, aCoord.lon], [bCoord.lat, bCoord.lon]]);
+            return;
+          }
+          var startKey = nearestInGraph(graph, aCoord.lat, aCoord.lon);
+          var endKey   = nearestInGraph(graph, bCoord.lat, bCoord.lon);
+          var segPath = dijkstra(graph.adj, graph.nodes, startKey, endKey);
+          if (segPath && segPath.length > 1) {
+            var pts = segPath.map(function(k) { return [graph.nodes[k].lat, graph.nodes[k].lon]; });
+            onSegmentDone(idx, pts);
+          } else {
+            onSegmentDone(idx, [[aCoord.lat, aCoord.lon], [bCoord.lat, bCoord.lon]]);
+          }
+        })
+        .catch(function() {
+          onSegmentDone(idx, [[aCoord.lat, aCoord.lon], [bCoord.lat, bCoord.lon]]);
         });
-      } else {
-        // Fallback: straight line for this segment if graph is disconnected
-        if (fullPath.length === 0 || fullPath[fullPath.length-1][0] !== coordCache[resolved[i].name].lat)
-          fullPath.push([coordCache[resolved[i  ].name].lat, coordCache[resolved[i  ].name].lon]);
-        fullPath.push([coordCache[resolved[i+1].name].lat, coordCache[resolved[i+1].name].lon]);
-      }
+      })(i);
     }
-
-    savePath(fullPath);
-    solvedPath = fullPath;
-    renderPath(fullPath);
-    setStatus(null);
+    setStatus('Se incarca liniile CF...');
   }
 
-  // ---------- fetch Overpass + solve (once per session) ----------
-  function fetchAndSolve() {
-    if (graphFetched) return;
-    var ready = STATIONS.filter(function(s){ return !!coordCache[s.name]; });
-    if (ready.length < 2) return; // need at least origin + destination
-    graphFetched = true;
 
-    var lats = ready.map(function(s){ return coordCache[s.name].lat; });
-    var lons = ready.map(function(s){ return coordCache[s.name].lon; });
-    var PAD  = 0.12;
-    var bbox = [Math.min.apply(null,lats)-PAD, Math.min.apply(null,lons)-PAD,
-                Math.max.apply(null,lats)+PAD, Math.max.apply(null,lons)+PAD];
-
-    setStatus('Se încarcă liniile CF…');
-    var query = '[out:json][timeout:45][bbox:' + bbox.join(',') + '];'
-              + 'way["railway"="rail"]["service"!~"siding|yard|spur"];'
-              + 'out geom;';
-    fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      body: 'data=' + encodeURIComponent(query),
-      headers: {'Content-Type':'application/x-www-form-urlencoded'}
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(d){ solveFromOverpass(d); })
-    .catch(function(){ setStatus(null); });
+  /* ── initial draw ── */
+  if (solvedPath) {
+    renderPath(solvedPath, true);
   }
-
-  // ---------- initial draw (from caches) ----------
-  if (solvedPath) renderPath(solvedPath);
   drawMarkers();
 
-  // ---------- name normaliser (remove diacritics, lowercase) ----------
+  /* ── name normaliser (for runtime Overpass matching) ── */
   function normName(n) {
     return n.toLowerCase()
-      .replace(/ă/g,'a').replace(/â/g,'a').replace(/î/g,'i')
-      .replace(/ș/g,'s').replace(/ş/g,'s')
-      .replace(/ț/g,'t').replace(/ţ/g,'t')
+      .replace(/\\u0103/g,'a').replace(/\\u00e2/g,'a').replace(/\\u00ee/g,'i')
+      .replace(/\\u0219/g,'s').replace(/\\u015f/g,'s')
+      .replace(/\\u021b/g,'t').replace(/\\u0163/g,'t')
       .replace(/[-_]/g,' ').trim();
   }
 
-  // ---------- Overpass railway station node lookup (name-targeted, fast) ----------
+  /* ── Overpass station node lookup (for unresolved only) ── */
   function fetchStationNodes(uncached, callback) {
-    setStatus('Se caută stațiile…');
-
-    // Build a server-side regex so Overpass returns ONLY nodes whose name
-    // matches one of our station names — tiny response vs fetching all Romania
-    var escaped = uncached.map(function(s){
-      return normName(s.name).replace(/[.*+?^\${}()|[\]\\]/g,'\\$&');
-    });
-    var namesRx = escaped.join('|');
+    if (!NAMES_RX) { callback(); return; }
+    setStatus('Se cauta statiile...');
 
     var query = '[out:json][timeout:20][bbox:43.5,20.0,48.3,30.5];'
-              + '(node["railway"~"station|halt"]["name"~"' + namesRx + '",i];);out;';
+              + '(node["railway"~"station|halt"]["name"~"' + NAMES_RX + '",i];);out;';
 
     fetch('https://overpass-api.de/api/interpreter', {
       method:'POST', body:'data='+encodeURIComponent(query),
@@ -268,58 +346,64 @@ export function buildLeafletHtml(stations: MapStation[]): string {
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      // norm name → ALL matching nodes so we can pick the right duplicate
-      var osmMap = {};
+      var osmNodes = [];
       (d.elements||[]).forEach(function(el){
         if (!el.tags || !el.tags.name) return;
-        var key = normName(el.tags.name);
-        if (!osmMap[key]) osmMap[key] = [];
-        osmMap[key].push({lat:el.lat, lon:el.lon});
+        osmNodes.push({ lat: el.lat, lon: el.lon, name: el.tags.name, norm: normName(el.tags.name) });
       });
 
-      // Centroid of already-resolved stations — pick duplicate closest to route
-      function refCentroid() {
-        var pts = STATIONS.filter(function(s){ return !!coordCache[s.name]; })
-                          .map(function(s){ return coordCache[s.name]; });
-        if (!pts.length) return null;
-        var lat=0, lon=0;
-        pts.forEach(function(p){ lat+=p.lat; lon+=p.lon; });
-        return {lat:lat/pts.length, lon:lon/pts.length};
-      }
-
-      function bestCandidate(candidates) {
-        if (candidates.length === 1) return candidates[0];
-        var ref = refCentroid();
-        if (!ref) return candidates[0];
-        var best = candidates[0], bestD = dist2(candidates[0], ref);
-        for (var i=1; i<candidates.length; i++) {
-          var d = dist2(candidates[i], ref);
-          if (d < bestD) { bestD = d; best = candidates[i]; }
-        }
-        return best;
-      }
-
       uncached.forEach(function(s){
-        var norm = normName(s.name);
-        // Only accept exact normalized name matches
-        if (osmMap[norm]) {
-          // Filter to only exact normalized name matches (in case regex matched more)
-          var exactMatches = osmMap[norm].filter(function(candidate) {
-            return normName(candidate.name || s.name) === norm;
-          });
-          if (exactMatches.length > 0) {
-            coordCache[s.name] = bestCandidate(exactMatches);
-            return;
-          }
+        var sIdx = STATIONS.indexOf(s);
+        var sNorm = normName(s.name).replace(/^(gara|halta|statia) /, '').replace(/ (hc|hm|gr a|gr b)/g, '').trim();
+        var sTokens = sNorm.split(' ').filter(function(x){ return x.length > 2 || x === sNorm; });
+
+        // Find nearest resolved neighbors in the route to compute expected position
+        var prevResolved = null, nextResolved = null;
+        for (var pi = sIdx - 1; pi >= 0; pi--) {
+          if (coordCache[STATIONS[pi].name]) { prevResolved = coordCache[STATIONS[pi].name]; break; }
         }
-        var stripped = norm.replace(/^(gara|halta|statia)\s+/, '');
-        if (stripped !== norm && osmMap[stripped]) {
-          var exactMatches2 = osmMap[stripped].filter(function(candidate) {
-            return normName(candidate.name || s.name) === stripped;
-          });
-          if (exactMatches2.length > 0) {
-            coordCache[s.name] = bestCandidate(exactMatches2);
+        for (var ni = sIdx + 1; ni < STATIONS.length; ni++) {
+          if (coordCache[STATIONS[ni].name]) { nextResolved = coordCache[STATIONS[ni].name]; break; }
+        }
+
+        // Expected position: midpoint of neighbors (or whichever is available)
+        var refLat, refLon;
+        if (prevResolved && nextResolved) {
+          refLat = (prevResolved.lat + nextResolved.lat) / 2;
+          refLon = (prevResolved.lon + nextResolved.lon) / 2;
+        } else if (prevResolved) {
+          refLat = prevResolved.lat; refLon = prevResolved.lon;
+        } else if (nextResolved) {
+          refLat = nextResolved.lat; refLon = nextResolved.lon;
+        } else {
+          refLat = 45.9; refLon = 24.9; // Romania centroid fallback
+        }
+
+        var best = null, bestScore = -Infinity;
+        osmNodes.forEach(function(node) {
+          var nNorm = node.norm.replace(/^(gara|halta|statia) /, '').trim();
+          var nameScore = 0;
+          if (nNorm === sNorm) { nameScore = 100; }
+          else {
+            for (var ti = 0; ti < sTokens.length; ti++) {
+              if (nNorm.indexOf(sTokens[ti]) !== -1) nameScore += 10;
+            }
+            nameScore -= Math.abs(nNorm.length - sNorm.length) * 0.5;
           }
+          if (nameScore < 10) return; // Must match name first
+
+          // Proximity score: prefer candidates close to expected route position
+          // Use degrees-squared distance (smaller = better), scale to 0-50 bonus
+          var dLat = node.lat - refLat, dLon = node.lon - refLon;
+          var d2 = dLat*dLat + dLon*dLon; // degrees²
+          // 1 degree ≈ 111km; d2 of 0.01 means ~11km off-route
+          var proximityBonus = Math.max(0, 50 - d2 * 2000);
+          var score = nameScore + proximityBonus;
+
+          if (score > bestScore) { bestScore = score; best = node; }
+        });
+        if (best && bestScore >= 10) {
+          coordCache[s.name] = { lat: best.lat, lon: best.lon };
         }
       });
       saveCoords();
@@ -328,32 +412,29 @@ export function buildLeafletHtml(stations: MapStation[]): string {
     .catch(function(){ saveCoords(); callback(); });
   }
 
-  // ---------- Nominatim fallback (1 req/s) for anything still unresolved ----------
-  var nQueue = [];
-  var nQi   = 0;
+  /* ── Nominatim fallback ── */
+  var nQueue = [], nQi = 0;
   var NBASE = 'https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ro&q=';
 
   function nominatimNext() {
     if (nQi >= nQueue.length) {
       saveCoords(); drawMarkers();
-      if (!solvedPath) fetchAndSolve();
+      if (!solvedPath) buildStraightPath();
+      if (!railSolved) fetchRailGeometry();
       else setStatus(null);
       return;
     }
     var s = nQueue[nQi++];
     setStatus('Localizare: ' + nQi + '/' + nQueue.length);
-
     function tryFetch(q) {
       return fetch(NBASE + encodeURIComponent(q), {headers:{'User-Agent':'TrainTracker/1.0'}})
              .then(function(r){ return r.json(); });
     }
     function pickBest(res) {
       if (!res || !res.length) return null;
-      // Prefer actual railway class results
       var rw = res.filter(function(r){ return r.class === 'railway'; });
       return rw.length ? rw[0] : res[0];
     }
-
     tryFetch('gara ' + s.name + ' Romania')
       .then(function(res){
         var best = pickBest(res);
@@ -368,29 +449,43 @@ export function buildLeafletHtml(stations: MapStation[]): string {
       .catch(function(){ setTimeout(nominatimNext, 1100); });
   }
 
-  // ---------- kick off geocoding pipeline ----------
+  /* ── main pipeline ── */
   function startGeocoding() {
     var uncached = STATIONS.filter(function(s){ return !coordCache[s.name]; });
-    if (uncached.length === 0) {
-      drawMarkers();
-      if (!solvedPath) fetchAndSolve(); else setStatus(null);
+
+    // Phase 1: Immediately render what we have
+    drawMarkers();
+    if (!solvedPath) buildStraightPath();
+
+    // Phase 2: If all cached AND rail already solved, we're done
+    if (uncached.length === 0 && railSolved) {
+      setStatus(null);
       return;
     }
-    // Stage 1: Overpass station nodes
-    fetchStationNodes(uncached, function(){
-      drawMarkers();
-      // Stage 2: Nominatim for any still missing
-      nQueue = STATIONS.filter(function(s){ return !coordCache[s.name]; });
-      nQi = 0;
-      if (nQueue.length > 0) nominatimNext();
-      else if (!solvedPath) fetchAndSolve();
-      else setStatus(null);
-    });
+
+    // Phase 3: Resolve any uncached stations
+    if (uncached.length > 0) {
+      fetchStationNodes(uncached, function(){
+        drawMarkers();
+        nQueue = STATIONS.filter(function(s){ return !coordCache[s.name]; });
+        nQi = 0;
+        if (nQueue.length > 0) {
+          nominatimNext();
+        } else {
+          // All resolved now — rebuild straight path & fetch rail geometry
+          buildStraightPath();
+          if (!railSolved) fetchRailGeometry();
+        }
+      });
+    } else if (!railSolved) {
+      // All coords known but rail not solved yet
+      fetchRailGeometry();
+    }
   }
 
   startGeocoding();
 
-  // ---------- GPS dot injected from React Native ----------
+  /* ── GPS dot ── */
   window.setUserLocation = function(lat, lon) {
     if (userMarker) { userMarker.setLatLng([lat, lon]); return; }
     var icon = L.divIcon({
@@ -398,10 +493,10 @@ export function buildLeafletHtml(stations: MapStation[]): string {
       iconSize:[16,16], iconAnchor:[8,8], className:''
     });
     userMarker = L.marker([lat,lon], {icon:icon, zIndexOffset:1000})
-      .addTo(map).bindPopup('Tu ești aici');
+      .addTo(map).bindPopup('Tu esti aici');
   };
 })();
-</script>
+<\/script>
 </body>
 </html>`;
 }
