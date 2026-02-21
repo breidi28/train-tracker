@@ -66,7 +66,8 @@ export default function StationDetailScreen() {
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const itemLayouts = useRef<{ [key: number]: number }>({});
+  const targetRef = useRef<View>(null);
+  const hasScrolled = useRef(false);
 
   const stationId = Number(id);
 
@@ -103,19 +104,9 @@ export default function StationDetailScreen() {
     return !isTimePast(time);
   });
 
-  // Scroll to upcoming trains when layouts are ready
+  // Reset scroll tracking when data or tab changes
   useEffect(() => {
-    if (upcomingIndex <= 0 || !scrollViewRef.current) return;
-
-    // Wait for layouts to be measured
-    const scrollTimeout = setTimeout(() => {
-      const targetLayout = itemLayouts.current[upcomingIndex - 1];
-      if (targetLayout !== undefined) {
-        scrollViewRef.current?.scrollTo({ y: targetLayout, animated: true });
-      }
-    }, 300);
-
-    return () => clearTimeout(scrollTimeout);
+    hasScrolled.current = false;
   }, [upcomingIndex, tab]);
 
   if (loading) {
@@ -202,8 +193,18 @@ export default function StationDetailScreen() {
               return (
                 <View
                   key={`${trainLabel}-${i}`}
-                  onLayout={(event) => {
-                    itemLayouts.current[i] = event.nativeEvent.layout.y;
+                  ref={i === upcomingIndex - 1 ? targetRef : undefined}
+                  onLayout={() => {
+                    if (i === upcomingIndex - 1 && !hasScrolled.current) {
+                      hasScrolled.current = true;
+                      // measureLayout gives position relative to the ScrollView's
+                      // coordinate space — reliable on iOS unlike layout.y
+                      targetRef.current?.measureLayout(
+                        scrollViewRef.current as any,
+                        (_x, y) => scrollViewRef.current?.scrollTo({ y, animated: true }),
+                        () => {}
+                      );
+                    }
                   }}
                 >
                   <Link

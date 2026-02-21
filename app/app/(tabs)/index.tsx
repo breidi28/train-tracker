@@ -56,7 +56,7 @@ export default function HomeScreen() {
       <View className="pb-8">
         {/* Hero */}
         <View className="bg-primary px-6 pt-8 pb-12">
-          <Text className="text-white text-3xl font-bold mb-2">Trenul Meu</Text>
+          <Text className="text-white text-3xl font-bold mb-2">Caută trenul tău</Text>
           <Text className="text-blue-100 text-sm">Urmărește trenul în timp real</Text>
         </View>
 

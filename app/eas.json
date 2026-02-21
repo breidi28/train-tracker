@@ -1,0 +1,26 @@
+{
+  "cli": {
+    "version": ">= 14.0.0"
+  },
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk",
+        "image": "latest",
+        "env": {
+          "ANDROID_NDK_VERSION": "26.1.10909125"
+        }
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle",
+        "image": "latest",
+        "env": {
+          "ANDROID_NDK_VERSION": "26.1.10909125"
+        }
+      }
+    }
+  },
+  "submit": {}
+}

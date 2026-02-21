@@ -25,7 +25,7 @@ export default function TabLayout() {
         options={{
           title: 'Acasă',
           tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
-          headerTitle: 'Trenul Meu',
+          headerTitle: 'CFR Train Tracker',
         }}
       />
       <Tabs.Screen

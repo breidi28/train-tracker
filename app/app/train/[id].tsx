@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   View, Text, ScrollView, ActivityIndicator,
-  TouchableOpacity, RefreshControl,
+  TouchableOpacity, RefreshControl, Modal,
 } from 'react-native';
+import { WebView } from 'react-native-webview';
+import * as Location from 'expo-location';
+import { buildLeafletHtml } from '../../src/leafletMap';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { fetchTrain } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,6 +50,10 @@ export default function TrainDetailScreen() {
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(0);
+  const [showMap, setShowMap] = useState(false);
+  const [mapHtml, setMapHtml] = useState('');
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const webviewRef = useRef<WebView>(null);
 
   const load = async () => {
     try {
@@ -68,6 +75,41 @@ export default function TrainDetailScreen() {
 
   useEffect(() => { load(); }, [id]);
   const onRefresh = () => { setRefreshing(true); load(); };
+
+  // Rebuild map HTML whenever the active branch changes
+  useEffect(() => {
+    if (!train) return;
+    const bs: { label: string; stations_data: Stop[] }[] = train?.branches ?? [];
+    const ss: Stop[] = bs.length > 0
+      ? (bs[selectedBranch]?.stations_data ?? [])
+      : (train?.stops ?? train?.stations ?? []);
+    const names = ss
+      .map((s: Stop) => ({ name: s.station_name ?? s.stationName ?? '' }))
+      .filter(s => s.name);
+    if (!names.length) return;
+    setMapHtml(buildLeafletHtml(names));
+  }, [train, selectedBranch]);
+
+  // Request GPS when the map modal opens
+  useEffect(() => {
+    if (!showMap) return;
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setUserLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
+      } catch {}
+    })();
+  }, [showMap]);
+
+  // Push GPS fix into the WebView once it arrives
+  useEffect(() => {
+    if (!userLocation || !webviewRef.current) return;
+    webviewRef.current.injectJavaScript(
+      `window.setUserLocation(${userLocation.lat},${userLocation.lon});true;`
+    );
+  }, [userLocation]);
 
   const branches: { label: string; stations_data: Stop[] }[] = train?.branches ?? [];
   const stops: Stop[] = branches.length > 0
@@ -132,6 +174,9 @@ export default function TrainDetailScreen() {
               <Text className="text-base font-semibold text-gray-900">{route}</Text>
               <Text className="text-xs text-gray-400 mt-1">{operator}</Text>
             </View>
+            <TouchableOpacity onPress={() => setShowMap(true)} className="ml-2 p-2" activeOpacity={0.7}>
+              <Ionicons name="map-outline" size={22} color="#0066CC" />
+            </TouchableOpacity>
           </View>
 
           {/* Branch selector (only shown when there are multiple branches) */}
@@ -203,6 +248,42 @@ export default function TrainDetailScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Route Map Modal */}
+      <Modal visible={showMap} animationType="slide" onRequestClose={() => setShowMap(false)}>
+        <View style={{ flex: 1 }}>
+          {/* Modal header */}
+          <View className="bg-white border-b border-gray-200 px-4 flex-row items-center"
+                style={{ paddingTop: 52, paddingBottom: 12 }}>
+            <Text className="flex-1 text-base font-semibold text-gray-900">Harta rutei · {trainNumber}</Text>
+            <TouchableOpacity onPress={() => setShowMap(false)} className="p-1" activeOpacity={0.7}>
+              <Ionicons name="close" size={24} color="#374151" />
+            </TouchableOpacity>
+          </View>
+          {mapHtml ? (
+            <WebView
+              ref={webviewRef}
+              source={{ html: mapHtml }}
+              style={{ flex: 1 }}
+              originWhitelist={['*']}
+              javaScriptEnabled
+              domStorageEnabled
+              geolocationEnabled
+              onLoad={() => {
+                if (userLocation) {
+                  webviewRef.current?.injectJavaScript(
+                    `window.setUserLocation(${userLocation.lat},${userLocation.lon});true;`
+                  );
+                }
+              }}
+            />
+          ) : (
+            <View className="flex-1 justify-center items-center">
+              <ActivityIndicator size="large" color="#0066CC" />
+            </View>
+          )}
+        </View>
+      </Modal>
     </>
   );
 }
