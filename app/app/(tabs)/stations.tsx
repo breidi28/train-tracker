@@ -43,8 +43,12 @@ export default function StationsScreen() {
 
   useEffect(() => {
     if (!query.trim()) { setFiltered(stations); return; }
-    const q = query.toLowerCase();
-    setFiltered(stations.filter(s => s.name.toLowerCase().includes(q)));
+
+    const normalize = (str: string) =>
+      str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+    const q = normalize(query);
+    setFiltered(stations.filter(s => normalize(s.name).includes(q)));
   }, [query, stations]);
 
   const bg = dark ? 'bg-gray-950' : 'bg-gray-50';

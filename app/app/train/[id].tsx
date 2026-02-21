@@ -102,12 +102,12 @@ function delayColor(min: number | null | undefined): string {
   if (min <= 5) return '#D97706';
   return '#DC2626';
 }
-const TRAIN_COLORS: Record<string, string> = {
-  IC: '#DC2626', IR: '#2563EB', R: '#16A34A', 'R-E': '#7C3AED',
+const CATEGORY_COLORS: Record<string, string> = {
+  IC: '#008000', IR: '#f00', IRN: '#f00', R: '#000', 'R-E': '#000',
 };
 function badgeBg(num: string): string {
   const p = num.split(/[\s\d]/)[0]?.toUpperCase() ?? '';
-  return TRAIN_COLORS[p] ?? '#4B5563';
+  return CATEGORY_COLORS[p] ?? '#4B5563';
 }
 
 // ─── Delay History Mini Chart ─────────────────────────────────────────────────

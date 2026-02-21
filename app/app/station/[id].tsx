@@ -40,8 +40,7 @@ function delayColor(min: number | null | undefined, dark: boolean) {
 }
 
 const RANK_COLORS: Record<string, string> = {
-  IC: '#DC2626', IR: '#2563EB', R: '#16A34A',
-  'R-E': '#7C3AED', RE: '#7C3AED', IRN: '#1E40AF',
+  IC: '#008000', IR: '#f00', IRN: '#f00', R: '#000', 'R-E': '#000',
 };
 function rankBadge(rank?: string): string {
   return RANK_COLORS[rank?.toUpperCase() ?? ''] ?? '#4B5563';

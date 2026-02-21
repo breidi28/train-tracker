@@ -16,10 +16,11 @@ export const COLORS = {
 };
 
 export const TRAIN_TYPE_COLORS: Record<string, string> = {
-  IC: '#E53935',
-  IR: '#1E88E5',
-  R: '#43A047',
-  'R-E': '#8E24AA',
+  IC: '#008000',
+  IR: '#f00',
+  IRN: '#f00',
+  R: '#000',
+  'R-E': '#000',
   default: '#757575',
 };
 

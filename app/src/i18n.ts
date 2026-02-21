@@ -10,6 +10,7 @@ import hu from './locales/hu.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
 import nl from './locales/nl.json';
+import it from './locales/it.json';
 
 export const LANGUAGES = [
     { code: 'ro', label: 'Română', flag: '🇷🇴' },
@@ -19,6 +20,7 @@ export const LANGUAGES = [
     { code: 'es', label: 'Español', flag: '🇪🇸' },
     { code: 'fr', label: 'Français', flag: '🇫🇷' },
     { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
 ] as const;
 
 export type LangCode = typeof LANGUAGES[number]['code'];
@@ -59,6 +61,7 @@ export async function initI18n() {
                 es: { translation: es },
                 fr: { translation: fr },
                 nl: { translation: nl },
+                it: { translation: it },
             },
             lng,
             fallbackLng: 'ro',

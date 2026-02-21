@@ -10,7 +10,7 @@ import { useTheme } from '../../src/ThemeContext';
 import { useTranslation } from 'react-i18next';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  IC: '#DC2626', IR: '#2563EB', R: '#16A34A', 'R-E': '#7C3AED',
+  IC: '#008000', IR: '#f00', IRN: '#f00', R: '#000', 'R-E': '#000',
 };
 function categoryColor(trainNumber: string) {
   const p = trainNumber.split(/[\s\d]/)[0]?.toUpperCase() ?? '';
