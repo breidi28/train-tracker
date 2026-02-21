@@ -13,7 +13,11 @@
       "backgroundColor": "#0066CC"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.breidi.traintracker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.breidi.traintracker",
@@ -55,6 +59,12 @@
         "projectId": "60b63583-9d93-4252-af10-507bb0a51f37"
       }
     },
-    "owner": "breidi282"
+    "owner": "breidi282",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/60b63583-9d93-4252-af10-507bb0a51f37"
+    }
   }
 }

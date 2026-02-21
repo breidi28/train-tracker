@@ -70,6 +70,17 @@ function timeToMinutes(t: string | undefined): number | null {
   return parts[0] * 60 + parts[1];
 }
 
+/** Add delayMin minutes to a "HH:MM" string and return the new "HH:MM" */
+function addMinutesToTime(timeStr: string | undefined, delayMin: number): string | null {
+  if (!timeStr || !delayMin) return null;
+  const base = timeToMinutes(timeStr);
+  if (base === null) return null;
+  const total = (base + delayMin) % (24 * 60);
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
 /** Compute dwell time in minutes between arrival and departure */
 function calcDwell(arr: string | undefined, dep: string | undefined): number {
   const a = timeToMinutes(arr);
@@ -599,16 +610,32 @@ export default function TrainDetailScreen() {
                       )}
                     </View>
                     <View className="flex-row gap-3 mt-1 flex-wrap items-center">
+                      {/* Scheduled times */}
                       {arr ? <Text className={`text-xs ${subText}`}>Arr: {arr}</Text> : null}
                       {dep ? <Text className={`text-xs ${subText}`}>Dep: {dep}</Text> : null}
-                      {/* Only show delay badge for passed stops with live data */}
-                      {isPassed && (delay !== 0 || hasLive) && (
+                      {/* Expected (delay-adjusted) times — shown when delay > 0 */}
+                      {delay > 0 && (() => {
+                        const expArr = addMinutesToTime(arr, delay);
+                        const expDep = addMinutesToTime(dep, delay);
+                        const expTime = expDep ?? expArr;
+                        if (!expTime) return null;
+                        return (
+                          <View className="flex-row items-center gap-1">
+                            <Ionicons name="arrow-forward" size={10} color="#D97706" />
+                            <Text className="text-xs font-semibold" style={{ color: '#D97706' }}>
+                              {expTime} estimat
+                            </Text>
+                          </View>
+                        );
+                      })()}
+                      {/* Delay badge */}
+                      {(isPassed || delay > 0) && (
                         <Text className="text-xs font-bold" style={{ color: delayColor(delay) }}>
-                          {formatDelay(delay)}
+                          {delay !== 0 ? formatDelay(delay) : hasLive ? 'La timp' : ''}
                         </Text>
                       )}
-                      {/* For upcoming stops: show scheduled label instead of 'La timp' */}
-                      {!isPassed && !isCurrent && (dep || arr) && (
+                      {/* For upcoming on-time stops: show scheduled label */}
+                      {!isPassed && !isCurrent && delay === 0 && (dep || arr) && (
                         <Text className={`text-xs italic ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
                           programat
                         </Text>
