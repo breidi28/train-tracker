@@ -47,6 +47,21 @@ function isTimePast(timeStr: string | undefined): boolean {
   return itemMinutes < currentMinutes;
 }
 
+/** Like isTimePast but accounts for the train's current delay.
+ *  A stop is only "passed" when scheduled_time + delay_minutes < now.
+ *  This prevents showing a 70-min-late train as having already passed
+ *  future stations that it physically cannot have reached yet. */
+function isTimePastWithDelay(timeStr: string | undefined, delayMin: number): boolean {
+  if (!timeStr) return false;
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  if (isNaN(hours) || isNaN(minutes)) return false;
+  const scheduledMinutes = hours * 60 + minutes;
+  const actualMinutes = scheduledMinutes + (delayMin ?? 0);
+  return actualMinutes < currentMinutes;
+}
+
 /** Parse "HH:MM" into total minutes from midnight */
 function timeToMinutes(t: string | undefined): number | null {
   if (!t) return null;
@@ -532,14 +547,18 @@ export default function TrainDetailScreen() {
               const isFirst = i === 0;
               const isLast = i === stops.length - 1;
 
-              // Determine whether this stop has been passed
-              // A stop is "passed" if it has live delay data OR its departure time is in the past
+              // Determine whether this stop has been passed.
+              // IMPORTANT: use delay-adjusted time, NOT the scheduled time.
+              // A train 70 min late leaving Focșani at 17:50 departs at 18:60 (19:00),
+              // so Râmnicu Sărat (18:30 scheduled) cannot be marked as passed until 18:30+70=19:40.
               const timeForPast = dep || arr;
-              const isPassed = delay !== 0 || isTimePast(timeForPast);
+              const isPassed = isTimePastWithDelay(timeForPast, delay);
 
               // Find the "current" stop = first stop NOT yet passed
-              // (We compute this outside the map for efficiency, but doing it inline is fine for small lists)
-              const prevPassed = i > 0 && (stops[i - 1].delay !== 0 || isTimePast(stops[i - 1].departure_time ?? stops[i - 1].departureTime ?? stops[i - 1].arrival_time ?? stops[i - 1].arrivalTime ?? ''));
+              const prevStop = stops[i - 1];
+              const prevDelay = prevStop ? (prevStop.delay ?? prevStop.delay_minutes ?? 0) : 0;
+              const prevTime = i > 0 ? (prevStop?.departure_time ?? prevStop?.departureTime ?? prevStop?.arrival_time ?? prevStop?.arrivalTime ?? '') : '';
+              const prevPassed = i > 0 && isTimePastWithDelay(prevTime, prevDelay);
               const isCurrent = !isPassed && prevPassed;
 
               // Dot color and style
