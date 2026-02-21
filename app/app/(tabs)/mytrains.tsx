@@ -7,7 +7,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { getWatchedTrains, removeWatchedTrain, type WatchedTrain } from '../../src/notifications';
-import { getRecentSearches, clearRecentSearches, type RecentTrain } from '../../src/storage';
+import { getRecentSearches, clearRecentSearches, getFavoriteTrains, getFavoriteStations, type RecentTrain, type FavoriteItem } from '../../src/storage';
 import { fetchTrain } from '../../src/api';
 import { useTheme } from '../../src/ThemeContext';
 
@@ -26,11 +26,21 @@ function delayColor(min: number): string {
     return '#DC2626';
 }
 
-// ─── Watched train row with live delay fetching ───────────────────────────────
-function WatchedRow({
-    wt, dark, onRemove,
-}: { wt: WatchedTrain; dark: boolean; onRemove: () => void }) {
-    const router = useRouter();
+// ─── Reusable Train Row with live delay fetching ────────────────────────────────
+interface TrainRowProps {
+    trainNumber: string;
+    routeLabel?: string;
+    subtitle?: string;
+    dark: boolean;
+    onPress: () => void;
+    onRemove?: () => void;
+    removeText?: string;
+    removeIcon?: keyof typeof Ionicons.glyphMap;
+}
+
+function TrainRow({
+    trainNumber, routeLabel, subtitle, dark, onPress, onRemove, removeText, removeIcon
+}: TrainRowProps) {
     const { t } = useTranslation();
     const [delay, setDelay] = useState<number | null>(null);
     const [fetching, setFetching] = useState(true);
@@ -41,7 +51,7 @@ function WatchedRow({
             (async () => {
                 setFetching(true);
                 try {
-                    const data = await fetchTrain(wt.trainNumber);
+                    const data = await fetchTrain(trainNumber);
                     const stops = data?.stops ?? data?.stations ?? [];
                     const max = stops.reduce(
                         (acc: number, s: any) => Math.max(acc, s.delay ?? s.delay_minutes ?? 0),
@@ -55,7 +65,7 @@ function WatchedRow({
                 }
             })();
             return () => { cancelled = true; };
-        }, [wt.trainNumber])
+        }, [trainNumber])
     );
 
     const card = dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200';
@@ -68,21 +78,21 @@ function WatchedRow({
         <View className={`border rounded-2xl mb-3 overflow-hidden ${card}`}>
             <TouchableOpacity
                 className="px-4 py-4 flex-row items-center"
-                onPress={() => router.push(`/train/${encodeURIComponent(wt.trainNumber)}`)}
+                onPress={onPress}
                 activeOpacity={0.7}
             >
                 {/* Category dot / badge */}
                 <View
                     className="w-10 h-10 rounded-xl items-center justify-center mr-3"
-                    style={{ backgroundColor: categoryColor(wt.trainNumber) + '22' }}
+                    style={{ backgroundColor: categoryColor(trainNumber) + '22' }}
                 >
-                    <Ionicons name="train" size={18} color={categoryColor(wt.trainNumber)} />
+                    <Ionicons name="train" size={18} color={categoryColor(trainNumber)} />
                 </View>
 
                 <View className="flex-1">
-                    <Text className={`text-base font-bold ${headTxt}`}>{wt.trainNumber}</Text>
-                    <Text className={`text-xs mt-0.5 ${subTxt}`} numberOfLines={1}>{wt.routeLabel}</Text>
-                    <Text className={`text-xs mt-1 ${subTxt}`}>{t('myTrains.addedAt', { date: wt.addedAt })}</Text>
+                    <Text className={`text-base font-bold ${headTxt}`}>{trainNumber}</Text>
+                    {routeLabel ? <Text className={`text-xs mt-0.5 ${subTxt}`} numberOfLines={1}>{routeLabel}</Text> : null}
+                    {subtitle ? <Text className={`text-xs mt-1 ${subTxt}`}>{subtitle}</Text> : null}
                 </View>
 
                 {/* Live delay badge */}
@@ -106,14 +116,16 @@ function WatchedRow({
             </TouchableOpacity>
 
             {/* Remove button */}
-            <TouchableOpacity
-                className={`px-4 py-2.5 border-t flex-row items-center ${dark ? 'border-gray-800' : 'border-gray-100'}`}
-                onPress={onRemove}
-                activeOpacity={0.7}
-            >
-                <Ionicons name="notifications-off-outline" size={14} color={dark ? '#6B7280' : '#9CA3AF'} />
-                <Text className={`text-xs ml-1.5 ${subTxt}`}>{t('myTrains.disableAlerts')}</Text>
-            </TouchableOpacity>
+            {onRemove && removeText && (
+                <TouchableOpacity
+                    className={`px-4 py-2.5 border-t flex-row items-center ${dark ? 'border-gray-800' : 'border-gray-100'}`}
+                    onPress={onRemove}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name={removeIcon ?? "notifications-off-outline"} size={14} color={dark ? '#6B7280' : '#9CA3AF'} />
+                    <Text className={`text-xs ml-1.5 ${subTxt}`}>{removeText}</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 }
@@ -126,6 +138,8 @@ export default function MyTrainsScreen() {
 
     const [watched, setWatched] = useState<WatchedTrain[]>([]);
     const [recents, setRecents] = useState<RecentTrain[]>([]);
+    const [favTrains, setFavTrains] = useState<FavoriteItem[]>([]);
+    const [favStations, setFavStations] = useState<FavoriteItem[]>([]);
 
     const bg = dark ? 'bg-gray-950' : 'bg-gray-50';
     const card = dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200';
@@ -136,6 +150,8 @@ export default function MyTrainsScreen() {
         useCallback(() => {
             getWatchedTrains().then(setWatched);
             getRecentSearches().then(setRecents);
+            getFavoriteTrains().then(setFavTrains);
+            getFavoriteStations().then(setFavStations);
         }, [])
     );
 
@@ -184,15 +200,71 @@ export default function MyTrainsScreen() {
                     </View>
                 ) : (
                     watched.map(wt => (
-                        <WatchedRow
+                        <TrainRow
                             key={wt.trainNumber}
-                            wt={wt}
+                            trainNumber={wt.trainNumber}
+                            routeLabel={wt.routeLabel}
+                            subtitle={t('myTrains.addedAt', { date: wt.addedAt })}
                             dark={dark}
+                            onPress={() => router.push(`/train/${encodeURIComponent(wt.trainNumber)}`)}
                             onRemove={() => handleRemoveWatched(wt.trainNumber)}
+                            removeText={t('myTrains.disableAlerts')}
+                            removeIcon="notifications-off-outline"
                         />
                     ))
                 )}
             </View>
+
+            {/* ── Favorite Trains ───────────────────────────────────────────── */}
+            {favTrains.length > 0 && (
+                <View className="px-4 mt-5">
+                    <View className="flex-row items-center mb-3">
+                        <Ionicons name="star" size={16} color="#F59E0B" />
+                        <Text className={`text-xs font-bold tracking-widest ml-2 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {t('home.favorites', 'FAVORITE TRAINS')}
+                        </Text>
+                    </View>
+                    <View>
+                        {favTrains.map((t) => (
+                            <TrainRow
+                                key={t.id}
+                                trainNumber={t.id}
+                                routeLabel={t.label}
+                                dark={dark}
+                                onPress={() => router.push(`/train/${encodeURIComponent(t.id)}`)}
+                            />
+                        ))}
+                    </View>
+                </View>
+            )}
+
+            {/* ── Favorite Stations ───────────────────────────────────────────── */}
+            {favStations.length > 0 && (
+                <View className="px-4 mt-5">
+                    <View className="flex-row items-center mb-3">
+                        <Ionicons name="location" size={16} color="#0066CC" />
+                        <Text className={`text-xs font-bold tracking-widest ml-2 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {t('myTrains.stations', 'FAVORITE STATIONS')}
+                        </Text>
+                    </View>
+                    <View className={`border rounded-2xl overflow-hidden ${card}`}>
+                        {favStations.map((s, i) => (
+                            <TouchableOpacity
+                                key={`${s.id}-${i}`}
+                                className={`px-4 py-3 flex-row items-center ${i < favStations.length - 1 ? `border-b ${dark ? 'border-gray-800' : 'border-gray-100'}` : ''}`}
+                                onPress={() => router.push(`/station/${encodeURIComponent(s.id)}?name=${encodeURIComponent(s.label)}`)}
+                                activeOpacity={0.6}
+                            >
+                                <Ionicons name="train" size={16} color="#0066CC" className="mr-3" />
+                                <View className="flex-1 ml-3">
+                                    <Text className={`text-sm font-bold ${headTxt}`}>{s.label}</Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={16} color={dark ? '#4B5563' : '#D1D5DB'} />
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+            )}
 
             {/* ── Recent searches ───────────────────────────────────────────── */}
             <View className="px-4 mt-5">
