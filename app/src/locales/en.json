@@ -29,7 +29,13 @@
         "clearAll": "Clear all",
         "noRecent": "No recent searches.",
         "favorites": "FAVOURITE TRAINS",
-        "noFavorites": "No favourite trains."
+        "noFavorites": "No favourite trains.",
+        "infoCard1Title": "Real-time tracking",
+        "infoCard1Body": "Check your train's location and delays",
+        "infoCard2Title": "Stations & schedule",
+        "infoCard2Body": "See the full schedule and stops",
+        "infoCard3Title": "Live delay updates",
+        "infoCard3Body": "Real-time delay information"
     },
     "trainDetail": {
         "stops": "STOPS",
@@ -54,7 +60,19 @@
         "reportSend": "SEND REPORT",
         "reportSent": "Report sent",
         "reportSentMsg": "Thank you! Your report helps other passengers.",
-        "reportError": "Could not send the report."
+        "reportError": "Could not send the report.",
+        "loading": "Loading data…",
+        "retry": "Retry",
+        "trySuggestions": "Try:",
+        "delayHistory": "DELAY HISTORY",
+        "measurements": "{{count}} readings",
+        "estimated2": "estimated",
+        "programmed": "scheduled",
+        "platformLabel": "Track {{platform}}",
+        "dwellLabel": "{{dwell}} min stop",
+        "mapModalTitle": "Route map · {{train}}",
+        "reportTime": "Now",
+        "addedAt": "Added: {{date}}"
     },
     "station": {
         "departures": "DEPARTURES",
@@ -65,7 +83,19 @@
         "noDepartures": "No departures available",
         "noArrivals": "No arrivals available",
         "to": "→",
-        "from": "←"
+        "from": "←",
+        "onTime": "On time",
+        "platformLabel": "Track {{platform}}",
+        "stationTitle": "Station {{id}}",
+        "shareMsg": "See LIVE schedule for Station {{name}} on Train Tracker!\nhttps://cfr.ro/station/{{id}}",
+        "loadError": "Error loading data",
+        "retroTrain": "TRAIN",
+        "retroRoute": "ROUTE",
+        "retroTime": "TIME",
+        "retroDelay": "DLY.",
+        "retroPlatform": "TRCK",
+        "onTimShort": "ON TM",
+        "unknown": "UNKNOWN"
     },
     "search": {
         "title": "Search Train",
@@ -73,7 +103,15 @@
         "recentSearches": "RECENT SEARCHES",
         "results": "RESULTS",
         "noResults": "No trains found.",
-        "searching": "Searching…"
+        "searching": "Searching…",
+        "header": "SEARCH TRAINS",
+        "inputPlaceholder": "Ex: IR, IC 536, Brașov…",
+        "suggestions": "Suggestions",
+        "searchError": "Search error",
+        "noResultFound": "No results found",
+        "hint": "Search by train number, category\n(IR, IC, R) or station name",
+        "departure": "Departure",
+        "arrival": "Arrival"
     },
     "myTrains": {
         "watching": "WATCHED TRAINS",
@@ -81,7 +119,17 @@
         "noWatching": "You are not watching any trains.",
         "noFavorites": "No favourite trains or stations.",
         "stations": "FAVOURITE STATIONS",
-        "trains": "FAVOURITE TRAINS"
+        "trains": "FAVOURITE TRAINS",
+        "noWatchingDesc": "Open a train and tap 🔔 to receive delay alerts",
+        "noRecent": "No recent searches",
+        "noRecentDesc": "Search for a train and it will appear here",
+        "recentSearches": "RECENT SEARCHES",
+        "clearAll": "Clear all",
+        "disableAlerts": "Disable alerts",
+        "stopAlertsTitle": "Stop alerts",
+        "stopAlertsMsg": "Stop delay notifications for {{train}}?",
+        "stop": "Stop",
+        "addedAt": "Added: {{date}}"
     },
     "settings": {
         "title": "Settings",
@@ -103,7 +151,9 @@
             "Delay alerts",
             "Dark mode",
             "History"
-        ]
+        ],
+        "checking": "Checking…",
+        "cannotConnect": "Cannot connect"
     },
     "tabs": {
         "home": "Home",

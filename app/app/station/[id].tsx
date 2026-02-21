@@ -83,7 +83,7 @@ export default function StationDetailScreen() {
       setDepartures(deps);
       setArrivals(arrs);
     } catch (e: any) {
-      setError(e?.response?.data?.error ?? e.message ?? 'Eroare la încărcare');
+      setError(e?.response?.data?.error ?? e.message ?? t('station.loadError'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -102,14 +102,14 @@ export default function StationDetailScreen() {
   const handleToggleFavorite = async () => {
     const isNowFav = await toggleFavoriteStation({
       id: String(stationId),
-      label: name ?? `Stația ${id}`,
+      label: name ?? t('station.stationTitle', { id }),
     });
     setIsFavorite(isNowFav);
   };
 
   const handleShare = async () => {
     try {
-      const msg = `Vezi orarul LIVE pentru Stația ${name ?? id} pe Train Tracker!\nhttps://cfr.ro/station/${encodeURIComponent(String(id))}`;
+      const msg = `${t('station.shareMsg', { name: name ?? id, id: encodeURIComponent(String(id)) })}`;
       await Share.share({ message: msg });
     } catch { }
   };
@@ -172,7 +172,7 @@ export default function StationDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          title: name ?? `Stația ${id}`,
+          title: name ?? t('station.stationTitle', { id }),
           headerRight: () => (
             <View className="flex-row items-center gap-4 pr-1">
               <TouchableOpacity onPress={handleToggleFavorite} activeOpacity={0.7}>
@@ -236,7 +236,7 @@ export default function StationDetailScreen() {
               className={`text-[10px] font-black uppercase ${showRetro ? 'text-amber-700' : subTxt
                 }`}
             >
-              Tabel Mecanic
+              {t('station.retroMode')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -313,7 +313,7 @@ export default function StationDetailScreen() {
                             </View>
                           ) : (
                             <View className="flex-row items-center gap-1">
-                              <Text className="text-xs" style={{ color: delayColor(0, dark) }}>La timp</Text>
+                              <Text className="text-xs" style={{ color: delayColor(0, dark) }}>{t('station.onTime')}</Text>
                               {item.data_source === 'iris_live' && (
                                 <View className="bg-green-500 rounded-full px-1.5 py-0.5"><Text className="text-white text-[9px] font-bold">LIVE</Text></View>
                               )}
@@ -325,7 +325,7 @@ export default function StationDetailScreen() {
                         <View className="flex-row mt-2.5 items-center">
                           {item.platform && (
                             <View className="rounded px-2 py-0.5 mr-2" style={{ backgroundColor: dark ? '#1F2937' : '#F3F4F6' }}>
-                              <Text className={`text-xs font-medium ${subTxt}`}>Linia {item.platform}</Text>
+                              <Text className={`text-xs font-medium ${subTxt}`}>{t('station.platformLabel', { platform: item.platform })}</Text>
                             </View>
                           )}
                           {item.operator && <Text className={`text-xs ${subTxt}`}>{item.operator}</Text>}
@@ -351,11 +351,11 @@ export default function StationDetailScreen() {
             ) : (
               <View className="mx-4 mt-3 rounded-xl overflow-hidden" style={{ backgroundColor: '#0A0A0A', borderWidth: 3, borderColor: '#27272A' }}>
                 <View className="flex-row px-3 pt-3 pb-2 border-b border-gray-800">
-                  <Text style={styles.retroHeader} className="w-14 flex-shrink-0">TREN</Text>
-                  <Text style={styles.retroHeader} className="flex-1">RUTA</Text>
-                  <Text style={styles.retroHeader} className="w-12 text-right">ORA</Text>
-                  <Text style={styles.retroHeader} className="w-14 text-right">ÎNT.</Text>
-                  <Text style={styles.retroHeader} className="w-8 text-right ml-1">LINIA</Text>
+                  <Text style={styles.retroHeader} className="w-14 flex-shrink-0">{t('station.retroTrain')}</Text>
+                  <Text style={styles.retroHeader} className="flex-1">{t('station.retroRoute')}</Text>
+                  <Text style={styles.retroHeader} className="w-12 text-right">{t('station.retroTime')}</Text>
+                  <Text style={styles.retroHeader} className="w-14 text-right">{t('station.retroDelay')}</Text>
+                  <Text style={styles.retroHeader} className="w-8 text-right ml-1">{t('station.retroPlatform')}</Text>
                 </View>
                 {data.filter(d => !isTimePast(tab === 'departures' ? d.departure_time : d.arrival_time)).slice(0, 18).map((item, i) => {
                   const trainLabel = item.train_id ?? item.train_number ?? '—';
@@ -365,9 +365,9 @@ export default function StationDetailScreen() {
                   return (
                     <View key={i} className="flex-row px-3 py-2 items-center" style={{ borderBottomWidth: 1, borderBottomColor: '#1C1C1E' }}>
                       <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="w-14 flex-shrink-0" numberOfLines={1}>{trainLabel.replace(' ', '')}</Text>
-                      <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="flex-1" numberOfLines={1}>{dest?.toUpperCase() ?? 'NECUNOSCUT'}</Text>
+                      <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="flex-1" numberOfLines={1}>{dest?.toUpperCase() ?? t('station.unknown')}</Text>
                       <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="w-12 text-right">{time}</Text>
-                      <Text style={[styles.retroCell, { color: delay > 0 ? '#EF4444' : '#4ADE80' }]} className="w-14 text-right">{delay > 0 ? `+${delay}` : 'LA TMP'}</Text>
+                      <Text style={[styles.retroCell, { color: delay > 0 ? '#EF4444' : '#4ADE80' }]} className="w-14 text-right">{delay > 0 ? `+${delay}` : t('station.onTimShort')}</Text>
                       <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="w-8 text-right ml-1">{item.platform ?? '-'}</Text>
                     </View>
                   );

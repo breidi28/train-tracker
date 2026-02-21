@@ -1,10 +1,3 @@
-/**
- * mytrains.tsx  — "Trenurile mele" tab
- *
- * Shows:
- *  • Watched trains (subscribed to delay alerts) with live delay badge
- *  • Recent searches with a quick "re-open" action
- */
 import { useState, useCallback } from 'react';
 import {
     View, Text, TouchableOpacity, ScrollView,
@@ -12,6 +5,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { getWatchedTrains, removeWatchedTrain, type WatchedTrain } from '../../src/notifications';
 import { getRecentSearches, clearRecentSearches, type RecentTrain } from '../../src/storage';
 import { fetchTrain } from '../../src/api';
@@ -26,10 +20,6 @@ function categoryColor(trainNumber: string) {
     return CATEGORY_COLORS[p] ?? '#4B5563';
 }
 
-function delayLabel(min: number): string {
-    if (min === 0) return 'La timp';
-    return `+${min} min`;
-}
 function delayColor(min: number): string {
     if (min === 0) return '#16A34A';
     if (min <= 5) return '#D97706';
@@ -41,6 +31,7 @@ function WatchedRow({
     wt, dark, onRemove,
 }: { wt: WatchedTrain; dark: boolean; onRemove: () => void }) {
     const router = useRouter();
+    const { t } = useTranslation();
     const [delay, setDelay] = useState<number | null>(null);
     const [fetching, setFetching] = useState(true);
 
@@ -71,6 +62,8 @@ function WatchedRow({
     const headTxt = dark ? 'text-white' : 'text-gray-900';
     const subTxt = dark ? 'text-gray-400' : 'text-gray-500';
 
+    const delayLabel = delay === null ? null : delay === 0 ? t('common.onTime') : `+${delay} min`;
+
     return (
         <View className={`border rounded-2xl mb-3 overflow-hidden ${card}`}>
             <TouchableOpacity
@@ -89,7 +82,7 @@ function WatchedRow({
                 <View className="flex-1">
                     <Text className={`text-base font-bold ${headTxt}`}>{wt.trainNumber}</Text>
                     <Text className={`text-xs mt-0.5 ${subTxt}`} numberOfLines={1}>{wt.routeLabel}</Text>
-                    <Text className={`text-xs mt-1 ${subTxt}`}>Adăugat: {wt.addedAt}</Text>
+                    <Text className={`text-xs mt-1 ${subTxt}`}>{t('myTrains.addedAt', { date: wt.addedAt })}</Text>
                 </View>
 
                 {/* Live delay badge */}
@@ -104,7 +97,7 @@ function WatchedRow({
                             style={{ backgroundColor: delayColor(delay) + '22' }}
                         >
                             <Text className="text-xs font-bold" style={{ color: delayColor(delay) }}>
-                                {delayLabel(delay)}
+                                {delayLabel}
                             </Text>
                         </View>
                     )}
@@ -119,7 +112,7 @@ function WatchedRow({
                 activeOpacity={0.7}
             >
                 <Ionicons name="notifications-off-outline" size={14} color={dark ? '#6B7280' : '#9CA3AF'} />
-                <Text className={`text-xs ml-1.5 ${subTxt}`}>Dezactivează alertele</Text>
+                <Text className={`text-xs ml-1.5 ${subTxt}`}>{t('myTrains.disableAlerts')}</Text>
             </TouchableOpacity>
         </View>
     );
@@ -129,6 +122,7 @@ function WatchedRow({
 export default function MyTrainsScreen() {
     const router = useRouter();
     const { dark } = useTheme();
+    const { t } = useTranslation();
 
     const [watched, setWatched] = useState<WatchedTrain[]>([]);
     const [recents, setRecents] = useState<RecentTrain[]>([]);
@@ -147,12 +141,12 @@ export default function MyTrainsScreen() {
 
     const handleRemoveWatched = async (trainNumber: string) => {
         Alert.alert(
-            'Oprește alertele',
-            `Oprești notificările de întârziere pentru ${trainNumber}?`,
+            t('myTrains.stopAlertsTitle'),
+            t('myTrains.stopAlertsMsg', { train: trainNumber }),
             [
-                { text: 'Anulează', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Oprește',
+                    text: t('myTrains.stop'),
                     style: 'destructive',
                     onPress: async () => {
                         await removeWatchedTrain(trainNumber);
@@ -176,16 +170,16 @@ export default function MyTrainsScreen() {
                 <View className="flex-row items-center mb-3">
                     <Ionicons name="notifications" size={16} color="#F59E0B" />
                     <Text className={`text-xs font-bold tracking-widest ml-2 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        TRENURI URMĂRITE
+                        {t('myTrains.watching')}
                     </Text>
                 </View>
 
                 {watched.length === 0 ? (
                     <View className={`border rounded-2xl p-6 items-center ${card}`}>
                         <Ionicons name="notifications-off-outline" size={40} color={dark ? '#4B5563' : '#D1D5DB'} />
-                        <Text className={`text-sm font-semibold mt-3 ${headTxt}`}>Niciun tren urmărit</Text>
+                        <Text className={`text-sm font-semibold mt-3 ${headTxt}`}>{t('myTrains.noWatching')}</Text>
                         <Text className={`text-xs text-center mt-1 ${subTxt}`}>
-                            Deschide un tren și apasă 🔔 pentru a primi alerte de întârziere
+                            {t('myTrains.noWatchingDesc')}
                         </Text>
                     </View>
                 ) : (
@@ -206,12 +200,12 @@ export default function MyTrainsScreen() {
                     <View className="flex-row items-center">
                         <Ionicons name="time-outline" size={16} color={dark ? '#6B7280' : '#9CA3AF'} />
                         <Text className={`text-xs font-bold tracking-widest ml-2 ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            CĂUTĂRI RECENTE
+                            {t('myTrains.recentSearches')}
                         </Text>
                     </View>
                     {recents.length > 0 && (
                         <TouchableOpacity onPress={handleClearRecents} activeOpacity={0.7}>
-                            <Text className="text-primary text-xs font-semibold">Șterge tot</Text>
+                            <Text className="text-primary text-xs font-semibold">{t('myTrains.clearAll')}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -219,9 +213,9 @@ export default function MyTrainsScreen() {
                 {recents.length === 0 ? (
                     <View className={`border rounded-2xl p-6 items-center ${card}`}>
                         <Ionicons name="search-outline" size={40} color={dark ? '#4B5563' : '#D1D5DB'} />
-                        <Text className={`text-sm font-semibold mt-3 ${headTxt}`}>Nicio căutare recentă</Text>
+                        <Text className={`text-sm font-semibold mt-3 ${headTxt}`}>{t('myTrains.noRecent')}</Text>
                         <Text className={`text-xs text-center mt-1 ${subTxt}`}>
-                            Caută un tren și va apărea aici
+                            {t('myTrains.noRecentDesc')}
                         </Text>
                     </View>
                 ) : (
@@ -243,9 +237,9 @@ export default function MyTrainsScreen() {
                                     </Text>
                                 </View>
                                 <View className="flex-1">
-                                    <Text className={`text-sm font-bold ${headTxt}`}>{t.trainNumber}</Text>
+                                    <Text className={`text-sm font-bold ${dark ? 'text-white' : 'text-gray-900'}`}>{t.trainNumber}</Text>
                                     {t.routeLabel ? (
-                                        <Text className={`text-xs mt-0.5 ${subTxt}`} numberOfLines={1}>{t.routeLabel}</Text>
+                                        <Text className={`text-xs mt-0.5 ${dark ? 'text-gray-400' : 'text-gray-500'}`} numberOfLines={1}>{t.routeLabel}</Text>
                                     ) : null}
                                 </View>
                                 <Ionicons name="chevron-forward" size={16} color={dark ? '#4B5563' : '#D1D5DB'} />

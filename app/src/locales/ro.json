@@ -29,7 +29,13 @@
         "clearAll": "Șterge tot",
         "noRecent": "Nicio căutare recentă.",
         "favorites": "TRENURI FAVORITE",
-        "noFavorites": "Niciun tren favorit."
+        "noFavorites": "Niciun tren favorit.",
+        "infoCard1Title": "Urmărire în timp real",
+        "infoCard1Body": "Verifică locația și întârzierile trenului tău",
+        "infoCard2Title": "Stații și orar",
+        "infoCard2Body": "Vezi orarul complet și stațiile de oprire",
+        "infoCard3Title": "Întârzieri actualizate",
+        "infoCard3Body": "Informații în timp real despre întârzieri"
     },
     "trainDetail": {
         "stops": "OPRIRI",
@@ -54,7 +60,19 @@
         "reportSend": "TRIMITE RAPORT",
         "reportSent": "Raport trimis",
         "reportSentMsg": "Mulțumim pentru contribuție! Raportul tău ajută alți călători.",
-        "reportError": "Nu am putut trimite raportul."
+        "reportError": "Nu am putut trimite raportul.",
+        "loading": "Se încarcă datele…",
+        "retry": "Reîncearcă",
+        "trySuggestions": "Încercați:",
+        "delayHistory": "ISTORIC ÎNTÂRZIERI",
+        "measurements": "{{count}} măsurători",
+        "estimated2": "estimat",
+        "programmed": "programat",
+        "platformLabel": "Linia {{platform}}",
+        "dwellLabel": "{{dwell}} min oprire",
+        "mapModalTitle": "Harta rutei · {{train}}",
+        "reportTime": "Acum",
+        "addedAt": "Adăugat: {{date}}"
     },
     "station": {
         "departures": "PLECĂRI",
@@ -65,7 +83,19 @@
         "noDepartures": "Nu sunt plecări disponibile",
         "noArrivals": "Nu sunt sosiri disponibile",
         "to": "→",
-        "from": "←"
+        "from": "←",
+        "onTime": "La timp",
+        "platformLabel": "Linia {{platform}}",
+        "stationTitle": "Stația {{id}}",
+        "shareMsg": "Vezi orarul LIVE pentru Stația {{name}} pe Train Tracker!\nhttps://cfr.ro/station/{{id}}",
+        "loadError": "Eroare la încărcare",
+        "retroTrain": "TREN",
+        "retroRoute": "RUTA",
+        "retroTime": "ORA",
+        "retroDelay": "ÎNT.",
+        "retroPlatform": "LINIA",
+        "onTimShort": "LA TMP",
+        "unknown": "NECUNOSCUT"
     },
     "search": {
         "title": "Caută Tren",
@@ -73,7 +103,15 @@
         "recentSearches": "CĂUTĂRI RECENTE",
         "results": "REZULTATE",
         "noResults": "Niciun tren găsit.",
-        "searching": "Se caută…"
+        "searching": "Se caută…",
+        "header": "CAUTĂ TRENURI",
+        "inputPlaceholder": "Ex: IR, IC 536, Brașov…",
+        "suggestions": "Sugestii",
+        "searchError": "Eroare la căutare",
+        "noResultFound": "Niciun rezultat găsit",
+        "hint": "Caută după număr tren, categorie\n(IR, IC, R) sau numele stației",
+        "departure": "Plecare",
+        "arrival": "Sosire"
     },
     "myTrains": {
         "watching": "TRENURI URMĂRITE",
@@ -81,7 +119,17 @@
         "noWatching": "Nu urmărești niciun tren.",
         "noFavorites": "Niciun tren sau stație favorită.",
         "stations": "STAȚII FAVORITE",
-        "trains": "TRENURI FAVORITE"
+        "trains": "TRENURI FAVORITE",
+        "noWatchingDesc": "Deschide un tren și apasă 🔔 pentru a primi alerte de întârziere",
+        "noRecent": "Nicio căutare recentă",
+        "noRecentDesc": "Caută un tren și va apărea aici",
+        "recentSearches": "CĂUTĂRI RECENTE",
+        "clearAll": "Șterge tot",
+        "disableAlerts": "Dezactivează alertele",
+        "stopAlertsTitle": "Oprește alertele",
+        "stopAlertsMsg": "Oprești notificările de întârziere pentru {{train}}?",
+        "stop": "Oprește",
+        "addedAt": "Adăugat: {{date}}"
     },
     "settings": {
         "title": "Setări",
@@ -103,7 +151,9 @@
             "Alerte întârzieri",
             "Mod întunecat",
             "Istoric"
-        ]
+        ],
+        "checking": "Se verifică…",
+        "cannotConnect": "Nu se poate conecta"
     },
     "tabs": {
         "home": "Acasă",

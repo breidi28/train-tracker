@@ -15,14 +15,14 @@ export default function SettingsScreen() {
   const [currentLang, setCurrentLang] = useState<LangCode>(i18n.language as LangCode);
 
   const checkConnection = async () => {
-    setStatus('Se verifică…');
+    setStatus(t('settings.checking'));
     setStatusOk(null);
     try {
       const data = await fetchApiStatus();
       setStatus(data.status ?? 'OK');
       setStatusOk(true);
     } catch {
-      setStatus('Nu se poate conecta');
+      setStatus(t('settings.cannotConnect'));
       setStatusOk(false);
     }
   };

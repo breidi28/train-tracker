@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { searchTrains } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const CATEGORY_COLORS: Record<string, string> = {
   IC: '#DC2626', IR: '#2563EB', R: '#16A34A', 'R-E': '#7C3AED',
@@ -27,6 +28,7 @@ interface TrainResult {
 export default function SearchScreen() {
   const router = useRouter();
   const { dark } = useTheme();
+  const { t } = useTranslation();
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<TrainResult[]>([]);
@@ -69,7 +71,7 @@ export default function SearchScreen() {
       const data = await searchTrains(q);
       setResults(data.results ?? []);
     } catch (e: any) {
-      setError(e?.response?.data?.error ?? 'Eroare la căutare');
+      setError(e?.response?.data?.error ?? t('search.searchError'));
       setResults([]);
     } finally {
       setLoading(false);
@@ -95,11 +97,11 @@ export default function SearchScreen() {
       <View>
         {/* Search bar */}
         <View className={`border-b px-4 pt-4 pb-3 ${card}`}>
-          <Text className={`font-bold mb-3 text-xs tracking-widest ${subText}`}>CAUTĂ TRENURI</Text>
+          <Text className={`font-bold mb-3 text-xs tracking-widest ${subText}`}>{t('search.header')}</Text>
           <View className="flex-row gap-3">
             <TextInput
               className={`flex-1 border rounded-xl px-4 py-3 text-base ${inputBg}`}
-              placeholder="Ex: IR, IC 536, Brașov…"
+              placeholder={t('search.inputPlaceholder')}
               placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
               value={query}
               onChangeText={setQuery}
@@ -123,7 +125,7 @@ export default function SearchScreen() {
         {showSuggestions && suggestions.length > 0 && (
           <View className={`border-b ${card}`}>
             <View className={`px-4 py-2 border-b ${divider}`}>
-              <Text className={`text-xs uppercase ${subText}`}>Sugestii</Text>
+              <Text className={`text-xs uppercase ${subText}`}>{t('search.suggestions')}</Text>
             </View>
             {suggestions.map((train, i) => (
               <TouchableOpacity
@@ -152,7 +154,7 @@ export default function SearchScreen() {
         {loading && (
           <View className="items-center py-8">
             <ActivityIndicator size="large" color="#0066CC" />
-            <Text className={`mt-3 ${subText}`}>Se caută…</Text>
+            <Text className={`mt-3 ${subText}`}>{t('search.searching')}</Text>
           </View>
         )}
 
@@ -183,10 +185,10 @@ export default function SearchScreen() {
               ) : null}
               <View className="flex-row gap-4 mt-1">
                 {train.departure_time ? (
-                  <Text className={`text-xs ${subText}`}>Plecare: {train.departure_time}</Text>
+                  <Text className={`text-xs ${subText}`}>{t('search.departure')}: {train.departure_time}</Text>
                 ) : null}
                 {train.arrival_time ? (
-                  <Text className={`text-xs ${subText}`}>Sosire: {train.arrival_time}</Text>
+                  <Text className={`text-xs ${subText}`}>{t('search.arrival')}: {train.arrival_time}</Text>
                 ) : null}
               </View>
             </View>
@@ -198,7 +200,7 @@ export default function SearchScreen() {
         {!loading && searched && results.length === 0 && !error && (
           <View className="items-center py-12">
             <Ionicons name="search" size={48} color={dark ? '#374151' : '#E5E7EB'} />
-            <Text className={`mt-3 ${subText}`}>Niciun rezultat găsit</Text>
+            <Text className={`mt-3 ${subText}`}>{t('search.noResultFound')}</Text>
           </View>
         )}
 
@@ -207,7 +209,7 @@ export default function SearchScreen() {
           <View className="items-center py-12">
             <Ionicons name="train" size={48} color={dark ? '#374151' : '#E5E7EB'} />
             <Text className={`text-center mt-3 ${subText}`}>
-              Caută după număr tren, categorie{'\n'}(IR, IC, R) sau numele stației
+              {t('search.hint')}
             </Text>
           </View>
         )}

@@ -272,14 +272,14 @@ export default function HomeScreen() {
         {/* ── Info cards ────────────────────────────────────────────────── */}
         <View className="px-4 mt-5 gap-3">
           {[
-            { icon: 'train' as const, title: 'Urmărire în timp real', body: 'Verifică locația și întârzierile trenului tău' },
-            { icon: 'location' as const, title: 'Stații și orar', body: 'Vezi orarul complet și stațiile de oprire' },
-            { icon: 'time' as const, title: 'Întârzieri actualizate', body: 'Informații în timp real despre întârzieri' },
-          ].map(({ icon, title, body }) => (
-            <View key={title} className={`border rounded-2xl p-4 ${card}`}>
+            { icon: 'train' as const, titleKey: 'home.infoCard1Title', bodyKey: 'home.infoCard1Body' },
+            { icon: 'location' as const, titleKey: 'home.infoCard2Title', bodyKey: 'home.infoCard2Body' },
+            { icon: 'time' as const, titleKey: 'home.infoCard3Title', bodyKey: 'home.infoCard3Body' },
+          ].map(({ icon, titleKey, bodyKey }) => (
+            <View key={titleKey} className={`border rounded-2xl p-4 ${card}`}>
               <Ionicons name={icon} size={26} color="#0066CC" style={{ marginBottom: 6 }} />
-              <Text className={`text-sm font-bold mb-1 ${headingText}`}>{title}</Text>
-              <Text className={`text-xs leading-5 ${labelText}`}>{body}</Text>
+              <Text className={`text-sm font-bold mb-1 ${headingText}`}>{t(titleKey)}</Text>
+              <Text className={`text-xs leading-5 ${labelText}`}>{t(bodyKey)}</Text>
             </View>
           ))}
         </View>

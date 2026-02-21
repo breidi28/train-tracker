@@ -29,7 +29,13 @@
         "clearAll": "Törlés",
         "noRecent": "Nincs korábbi keresés.",
         "favorites": "KEDVENC VONATOK",
-        "noFavorites": "Nincs kedvenc vonat."
+        "noFavorites": "Nincs kedvenc vonat.",
+        "infoCard1Title": "Valós idejű követés",
+        "infoCard1Body": "Ellenőrizze vonata helyzetét és késését",
+        "infoCard2Title": "Állomások és menetrend",
+        "infoCard2Body": "Teljes menetrend és megállók megtekintése",
+        "infoCard3Title": "Friss késési adatok",
+        "infoCard3Body": "Valós idejű késési információk"
     },
     "trainDetail": {
         "stops": "MEGÁLLÓK",
@@ -54,7 +60,19 @@
         "reportSend": "JELENTÉS KÜLDÉSE",
         "reportSent": "Jelentés elküldve",
         "reportSentMsg": "Köszönjük! Az Ön jelentése segít a többi utasnak.",
-        "reportError": "Nem sikerült elküldeni a jelentést."
+        "reportError": "Nem sikerült elküldeni a jelentést.",
+        "loading": "Adatok betöltése…",
+        "retry": "Újra",
+        "trySuggestions": "Próbálja:",
+        "delayHistory": "KÉSÉSI ELŐZMÉNYEK",
+        "measurements": "{{count}} mérés",
+        "estimated2": "becsült",
+        "programmed": "tervezett",
+        "platformLabel": "{{platform}}. vágány",
+        "dwellLabel": "{{dwell}} perc tartózkodás",
+        "mapModalTitle": "Útvonaltérkép · {{train}}",
+        "reportTime": "Most",
+        "addedAt": "Hozzáadva: {{date}}"
     },
     "station": {
         "departures": "INDULÁSOK",
@@ -65,7 +83,19 @@
         "noDepartures": "Nincs elérhető indulás",
         "noArrivals": "Nincs elérhető érkezés",
         "to": "→",
-        "from": "←"
+        "from": "←",
+        "onTime": "Menetrend szerint",
+        "platformLabel": "{{platform}}. vágány",
+        "stationTitle": "{{id}} állomás",
+        "shareMsg": "Nézze meg a(z) {{name}} állomás ÉLŐIDEJŰ menetrendjét a Train Trackeren!\nhttps://cfr.ro/station/{{id}}",
+        "loadError": "Hiba a betöltés során",
+        "retroTrain": "VONAT",
+        "retroRoute": "ÚTVONAL",
+        "retroTime": "IDŐ",
+        "retroDelay": "KÉS.",
+        "retroPlatform": "VÁG.",
+        "onTimShort": "MENET",
+        "unknown": "ISMERETLEN"
     },
     "search": {
         "title": "Vonat keresése",
@@ -73,7 +103,15 @@
         "recentSearches": "LEGUTÓBBI KERESÉSEK",
         "results": "EREDMÉNYEK",
         "noResults": "Nem találtunk vonatot.",
-        "searching": "Keresés…"
+        "searching": "Keresés…",
+        "header": "VONATOK KERESÉSE",
+        "inputPlaceholder": "Pl.: IR, IC 536, Brassó…",
+        "suggestions": "Javaslatok",
+        "searchError": "Keresési hiba",
+        "noResultFound": "Nem találtunk eredményt",
+        "hint": "Keressen vonatszám, kategória\n(IR, IC, R) vagy állomásnév alapján",
+        "departure": "Indulás",
+        "arrival": "Érkezés"
     },
     "myTrains": {
         "watching": "FIGYELT VONATOK",
@@ -81,7 +119,17 @@
         "noWatching": "Nem figyel egyetlen vonatot sem.",
         "noFavorites": "Nincs kedvenc vonat vagy állomás.",
         "stations": "KEDVENC ÁLLOMÁSOK",
-        "trains": "KEDVENC VONATOK"
+        "trains": "KEDVENC VONATOK",
+        "noWatchingDesc": "Nyisson meg egy vonatot és koppintson a 🔔 gombra a késési értesítésekhez",
+        "noRecent": "Nincs korábbi keresés",
+        "noRecentDesc": "Keressen egy vonatot és itt fog megjelenni",
+        "recentSearches": "LEGUTÓBBI KERESÉSEK",
+        "clearAll": "Törlés",
+        "disableAlerts": "Értesítések letiltása",
+        "stopAlertsTitle": "Értesítések leállítása",
+        "stopAlertsMsg": "Leállítja a késési értesítéseket a {{train}} vonatra?",
+        "stop": "Leállítás",
+        "addedAt": "Hozzáadva: {{date}}"
     },
     "settings": {
         "title": "Beállítások",
@@ -103,7 +151,9 @@
             "Késési értesítések",
             "Sötét mód",
             "Előzmények"
-        ]
+        ],
+        "checking": "Ellenőrzés…",
+        "cannotConnect": "Nem lehet csatlakozni"
     },
     "tabs": {
         "home": "Főoldal",

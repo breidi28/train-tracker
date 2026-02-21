@@ -93,8 +93,8 @@ function calcDwell(arr: string | undefined, dep: string | undefined): number {
   if (diff < 0) diff += 24 * 60; // midnight crossing
   return diff;
 }
-function formatDelay(min: number | null | undefined): string {
-  if (!min || min === 0) return 'La timp';
+function formatDelay(min: number | null | undefined, t: (key: string) => string): string {
+  if (!min || min === 0) return t('common.onTime');
   return min > 0 ? `+${min} min` : `${min} min`;
 }
 function delayColor(min: number | null | undefined): string {
@@ -111,7 +111,7 @@ function badgeBg(num: string): string {
 }
 
 // ─── Delay History Mini Chart ─────────────────────────────────────────────────
-function DelayChart({ history, dark }: { history: DelaySnapshot[]; dark: boolean }) {
+function DelayChart({ history, dark, t }: { history: DelaySnapshot[]; dark: boolean; t: (key: string, opts?: any) => string }) {
   if (!history.length) return null;
 
   const maxDelay = Math.max(...history.map(s => s.delay), 1);
@@ -121,7 +121,7 @@ function DelayChart({ history, dark }: { history: DelaySnapshot[]; dark: boolean
       <View className="flex-row items-center mb-3">
         <Ionicons name="stats-chart" size={16} color="#0066CC" />
         <Text className={`text-xs font-bold ml-2 tracking-widest ${dark ? 'text-gray-400' : 'text-gray-500'}`}>
-          ISTORIC ÎNTÂRZIERI
+          {t('trainDetail.delayHistory')}
         </Text>
       </View>
 
@@ -155,18 +155,20 @@ function DelayChart({ history, dark }: { history: DelaySnapshot[]; dark: boolean
 
       {/* Legend */}
       <View className="flex-row justify-between mt-3">
-        {[
-          { color: '#16A34A', label: 'La timp' },
-          { color: '#D97706', label: '1–5 min' },
-          { color: '#DC2626', label: '>5 min' },
-        ].map(({ color, label }) => (
-          <View key={label} className="flex-row items-center gap-1">
-            <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }} />
-            <Text style={{ fontSize: 10, color: dark ? '#6B7280' : '#9CA3AF' }}>{label}</Text>
-          </View>
-        ))}
+        {
+          [
+            { color: '#16A34A', label: t('common.onTime') },
+            { color: '#D97706', label: '1–5 min' },
+            { color: '#DC2626', label: '>5 min' },
+          ].map(({ color, label }) => (
+            <View key={label} className="flex-row items-center gap-1">
+              <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: color }} />
+              <Text style={{ fontSize: 10, color: dark ? '#6B7280' : '#9CA3AF' }}>{label}</Text>
+            </View>
+          ))
+        }
         <Text style={{ fontSize: 10, color: dark ? '#6B7280' : '#9CA3AF' }}>
-          {history.length} măsurători
+          {t('trainDetail.measurements', { count: history.length })}
         </Text>
       </View>
     </View>
@@ -229,7 +231,7 @@ export default function TrainDetailScreen() {
       setSelectedBranch(0);
       setError('');
     } catch (e: any) {
-      const msg = e?.response?.data?.error ?? e.message ?? 'Eroare';
+      const msg = e?.response?.data?.error ?? e.message ?? t('common.error');
       setError(msg);
       if (e?.response?.data?.suggestions) setTrain({ suggestions: e.response.data.suggestions });
     } finally {
@@ -341,8 +343,10 @@ export default function TrainDetailScreen() {
 
   const handleShare = async () => {
     try {
-      const waitTime = train?.delay && train.delay > 0 ? ` (+${train.delay} min întârziere)` : ' (La timp)';
-      const msg = `Urmărește trenul ${trainNumber} (${route}) pe Train Tracker!${waitTime}\nhttps://cfr.ro/train/${encodeURIComponent(trainNumber)}`;
+      const waitTime = train?.delay && train.delay > 0
+        ? ` (+${train.delay} min ${t('common.delayed').toLowerCase()})`
+        : ` (${t('common.onTime')})`;
+      const msg = `${t('trainDetail.watchingMsg')}: ${trainNumber} (${route})!${waitTime}\nhttps://cfr.ro/train/${encodeURIComponent(trainNumber)}`;
       await Share.share({ message: msg });
     } catch { }
   };
@@ -357,9 +361,9 @@ export default function TrainDetailScreen() {
       // Reload reports
       const reps = await fetchTrainReports(trainNumber);
       setReports(reps);
-      Alert.alert('Raport trimis', 'Mulțumim pentru contribuție! Raportul tău ajută alți călători.');
+      Alert.alert(t('trainDetail.reportSent'), t('trainDetail.reportSentMsg'));
     } catch (e) {
-      Alert.alert('Eroare', 'Nu am putut trimite raportul.');
+      Alert.alert(t('common.error'), t('trainDetail.reportError'));
     } finally {
       setReportLoading(false);
     }
@@ -385,7 +389,7 @@ export default function TrainDetailScreen() {
     return (
       <View className={`flex-1 justify-center items-center ${bg}`}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text className={`mt-3 ${subText}`}>Se încarcă datele…</Text>
+        <Text className={`mt-3 ${subText}`}>{t('trainDetail.loading')}</Text>
       </View>
     );
   }
@@ -395,7 +399,7 @@ export default function TrainDetailScreen() {
         <Ionicons name="alert-circle" size={64} color="#EF4444" />
         <Text className="text-red-500 text-base mt-3 text-center">{error}</Text>
         <TouchableOpacity className="bg-primary rounded-xl px-6 py-3 mt-4" onPress={load}>
-          <Text className="text-white font-semibold">Reîncearcă</Text>
+          <Text className="text-white font-semibold">{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -406,7 +410,7 @@ export default function TrainDetailScreen() {
         <View className="p-4">
           <View className={`border rounded-2xl p-4 ${card}`}>
             <Text className="text-red-500 text-center mb-2">{error}</Text>
-            <Text className={`text-base font-bold mt-2 ${headText}`}>Încercați:</Text>
+            <Text className={`text-base font-bold mt-2 ${headText}`}>{t('trainDetail.trySuggestions')}</Text>
             {train.suggestions.map((sug: string, i: number) => (
               <Text key={i} className="text-primary mt-1">• {sug}</Text>
             ))}
@@ -481,7 +485,7 @@ export default function TrainDetailScreen() {
           {/* ── Branch selector ───────────────────────────────────────── */}
           {branches.length > 1 && (
             <View className={`mt-1 px-4 pt-3 pb-2 border-b ${card}`}>
-              <Text className={`text-xs tracking-widest mb-2 ${subText}`}>SELECTEAZĂ RUTA</Text>
+              <Text className={`text-xs tracking-widest mb-2 ${subText}`}>{t('trainDetail.selectRoute')}</Text>
               <View className="flex-row flex-wrap gap-2">
                 {branches.map((b, i) => (
                   <TouchableOpacity
@@ -502,7 +506,7 @@ export default function TrainDetailScreen() {
           {/* ── Delay History Chart (Feature 9) ───────────────────────── */}
           {delayHistory.length > 0 && (
             <View className="px-4 mt-3">
-              <DelayChart history={delayHistory} dark={dark} />
+              <DelayChart history={delayHistory} dark={dark} t={t} />
             </View>
           )}
 
@@ -550,7 +554,7 @@ export default function TrainDetailScreen() {
                         <View className="bg-gray-200 dark:bg-gray-800 rounded px-2 py-0.5 mr-2">
                           <Text className={`text-xs font-bold uppercase ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{rep.report_type.replace('_', ' ')}</Text>
                         </View>
-                        <Text className={`text-xs ${subText}`}>{rep.reported_at?.slice(11, 16) ?? 'Acum'}</Text>
+                        <Text className={`text-xs ${subText}`}>{rep.reported_at?.slice(11, 16) ?? t('trainDetail.reportTime')}</Text>
                       </View>
                       {rep.message ? <Text className={`text-sm ${headText}`}>{rep.message}</Text> : null}
                     </View>
@@ -654,7 +658,7 @@ export default function TrainDetailScreen() {
                           <View className="flex-row items-center gap-1">
                             <Ionicons name="arrow-forward" size={10} color="#D97706" />
                             <Text className="text-xs font-semibold" style={{ color: '#D97706' }}>
-                              {expTime} estimat
+                              {expTime} {t('trainDetail.estimated2')}
                             </Text>
                           </View>
                         );
@@ -662,13 +666,13 @@ export default function TrainDetailScreen() {
                       {/* Delay badge */}
                       {(isPassed || delay > 0) && (
                         <Text className="text-xs font-bold" style={{ color: delayColor(delay) }}>
-                          {delay !== 0 ? formatDelay(delay) : hasLive ? 'La timp' : ''}
+                          {delay !== 0 ? formatDelay(delay, t) : hasLive ? t('common.onTime') : ''}
                         </Text>
                       )}
                       {/* For upcoming on-time stops: show scheduled label */}
                       {!isPassed && !isCurrent && delay === 0 && (dep || arr) && (
                         <Text className={`text-xs italic ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
-                          programat
+                          {t('trainDetail.programmed')}
                         </Text>
                       )}
                     </View>
@@ -678,7 +682,7 @@ export default function TrainDetailScreen() {
                         <View className={`flex-row items-center rounded-md px-2 py-0.5 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
                           <Ionicons name="train-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
                           <Text className={`text-xs ml-1 font-medium ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
-                            Linia {stop.platform}
+                            {t('trainDetail.platformLabel', { platform: stop.platform })}
                           </Text>
                         </View>
                       )}
@@ -690,7 +694,7 @@ export default function TrainDetailScreen() {
                           <View className={`flex-row items-center rounded-md px-2 py-0.5 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
                             <Ionicons name="time-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
                             <Text className={`text-xs ml-1 font-medium ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
-                              {dwell} min oprire
+                              {t('trainDetail.dwellLabel', { dwell })}
                             </Text>
                           </View>
                         );
@@ -717,7 +721,7 @@ export default function TrainDetailScreen() {
             className={`flex-row items-center border-b ${card}`}
           >
             <Text className={`flex-1 text-base font-semibold ${headText}`}>
-              Harta rutei · {trainNumber}
+              {t('trainDetail.mapModalTitle', { train: trainNumber })}
             </Text>
             <TouchableOpacity onPress={() => setShowMap(false)} className="p-1" activeOpacity={0.7}>
               <Ionicons name="close" size={24} color={dark ? '#E5E7EB' : '#374151'} />

@@ -29,7 +29,13 @@
         "clearAll": "Alle löschen",
         "noRecent": "Keine letzten Suchen.",
         "favorites": "LIEBLINGSZÜGE",
-        "noFavorites": "Keine Lieblingszüge."
+        "noFavorites": "Keine Lieblingszüge.",
+        "infoCard1Title": "Echtzeit-Verfolgung",
+        "infoCard1Body": "Position und Verspätung Ihres Zuges prüfen",
+        "infoCard2Title": "Bahnhöfe & Fahrplan",
+        "infoCard2Body": "Vollständigen Fahrplan und Halte anzeigen",
+        "infoCard3Title": "Aktuelle Verspätungen",
+        "infoCard3Body": "Echtzeitinformationen über Verspätungen"
     },
     "trainDetail": {
         "stops": "HALTE",
@@ -54,7 +60,19 @@
         "reportSend": "BERICHT SENDEN",
         "reportSent": "Bericht gesendet",
         "reportSentMsg": "Danke! Ihr Bericht hilft anderen Fahrgästen.",
-        "reportError": "Bericht konnte nicht gesendet werden."
+        "reportError": "Bericht konnte nicht gesendet werden.",
+        "loading": "Daten werden geladen…",
+        "retry": "Erneut versuchen",
+        "trySuggestions": "Versuchen Sie:",
+        "delayHistory": "VERSPÄTUNGSVERLAUF",
+        "measurements": "{{count}} Messungen",
+        "estimated2": "geschätzt",
+        "programmed": "planmäßig",
+        "platformLabel": "Gleis {{platform}}",
+        "dwellLabel": "{{dwell}} min Aufenthalt",
+        "mapModalTitle": "Streckenkarte · {{train}}",
+        "reportTime": "Jetzt",
+        "addedAt": "Hinzugefügt: {{date}}"
     },
     "station": {
         "departures": "ABFAHRTEN",
@@ -65,7 +83,19 @@
         "noDepartures": "Keine Abfahrten verfügbar",
         "noArrivals": "Keine Ankünfte verfügbar",
         "to": "→",
-        "from": "←"
+        "from": "←",
+        "onTime": "Pünktlich",
+        "platformLabel": "Gleis {{platform}}",
+        "stationTitle": "Bahnhof {{id}}",
+        "shareMsg": "LIVE-Fahrplan für Bahnhof {{name}} auf Train Tracker sehen!\nhttps://cfr.ro/station/{{id}}",
+        "loadError": "Fehler beim Laden",
+        "retroTrain": "ZUG",
+        "retroRoute": "STRECKE",
+        "retroTime": "ZEIT",
+        "retroDelay": "VERSP.",
+        "retroPlatform": "GLEIS",
+        "onTimShort": "PÜNKTL",
+        "unknown": "UNBEKANNT"
     },
     "search": {
         "title": "Zug suchen",
@@ -73,7 +103,15 @@
         "recentSearches": "LETZTE SUCHEN",
         "results": "ERGEBNISSE",
         "noResults": "Keine Züge gefunden.",
-        "searching": "Wird gesucht…"
+        "searching": "Wird gesucht…",
+        "header": "ZÜGE SUCHEN",
+        "inputPlaceholder": "z.B.: IR, IC 536, Brașov…",
+        "suggestions": "Vorschläge",
+        "searchError": "Suchfehler",
+        "noResultFound": "Keine Ergebnisse gefunden",
+        "hint": "Nach Zugnummer, Kategorie\n(IR, IC, R) oder Bahnhofsname suchen",
+        "departure": "Abfahrt",
+        "arrival": "Ankunft"
     },
     "myTrains": {
         "watching": "BEOBACHTETE ZÜGE",
@@ -81,7 +119,17 @@
         "noWatching": "Sie beobachten keine Züge.",
         "noFavorites": "Keine Lieblingszüge oder -stationen.",
         "stations": "LIEBLINGSBAHNHÖFE",
-        "trains": "LIEBLINGSZÜGE"
+        "trains": "LIEBLINGSZÜGE",
+        "noWatchingDesc": "Zug öffnen und auf 🔔 tippen, um Verspätungsbenachrichtigungen zu erhalten",
+        "noRecent": "Keine letzten Suchen",
+        "noRecentDesc": "Suchen Sie einen Zug und er erscheint hier",
+        "recentSearches": "LETZTE SUCHEN",
+        "clearAll": "Alle löschen",
+        "disableAlerts": "Benachrichtigungen deaktivieren",
+        "stopAlertsTitle": "Benachrichtigungen stoppen",
+        "stopAlertsMsg": "Verspätungsbenachrichtigungen für {{train}} stoppen?",
+        "stop": "Stopp",
+        "addedAt": "Hinzugefügt: {{date}}"
     },
     "settings": {
         "title": "Einstellungen",
@@ -103,7 +151,9 @@
             "Verspätungsalerts",
             "Dunkelmodus",
             "Verlauf"
-        ]
+        ],
+        "checking": "Wird geprüft…",
+        "cannotConnect": "Keine Verbindung"
     },
     "tabs": {
         "home": "Start",
