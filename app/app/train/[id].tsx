@@ -3,8 +3,9 @@ import {
   View, Text, ScrollView, ActivityIndicator,
   TouchableOpacity, RefreshControl, Modal, Alert, TextInput, Share
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+import CrossPlatformMapView, { type MapViewHandle } from '../../src/CrossPlatformMapView';
 import * as Location from 'expo-location';
+
 import { buildLeafletHtml } from '../../src/leafletMap';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { fetchTrain, fetchTrainReports, submitTrainReport } from '../../src/api';
@@ -188,8 +189,14 @@ export default function TrainDetailScreen() {
   const [showMap, setShowMap] = useState(false);
   const [mapHtml, setMapHtml] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
-  const webviewRef = useRef<WebView>(null);
+  const mapHandleRef = useRef<MapViewHandle | null>(null);
   const mapCacheKeyRef = useRef<string>('');
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  // Y-positions of each stop row, keyed by stop index
+  const stopYRef = useRef<Record<number, number>>({});
+  // Prevent re-scrolling on every re-render
+  const hasScrolledRef = useRef(false);
 
   // Notification state
   const [watching, setWatching] = useState(false);
@@ -210,6 +217,8 @@ export default function TrainDetailScreen() {
   const [showReports, setShowReports] = useState(false);
 
   const load = async () => {
+    hasScrolledRef.current = false; // reset so new data triggers auto-scroll
+    stopYRef.current = {};
     try {
       const [data, reps] = await Promise.all([
         fetchTrain(id ?? ''),
@@ -287,11 +296,10 @@ export default function TrainDetailScreen() {
   }, [showMap]);
 
   useEffect(() => {
-    if (!userLocation || !webviewRef.current) return;
-    webviewRef.current.injectJavaScript(
-      `window.setUserLocation(${userLocation.lat},${userLocation.lon});true;`
-    );
+    if (!userLocation || !mapHandleRef.current) return;
+    mapHandleRef.current.setUserLocation(userLocation.lat, userLocation.lon);
   }, [userLocation]);
+
 
   // Toggle notification subscription
   const handleToggleNotification = async () => {
@@ -412,6 +420,7 @@ export default function TrainDetailScreen() {
     <>
       <Stack.Screen options={{ title: trainNumber }} />
       <ScrollView
+        ref={scrollViewRef}
         className={`flex-1 ${bg}`}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066CC']} />}
       >
@@ -586,7 +595,22 @@ export default function TrainDetailScreen() {
               const lineColorBelow = isPassed && !isLast ? '#0066CC' : (dark ? '#374151' : '#E5E7EB');
 
               return (
-                <View key={i} className="flex-row min-h-[52px]">
+                <View
+                  key={i}
+                  className="flex-row min-h-[52px]"
+                  onLayout={(e) => {
+                    stopYRef.current[i] = e.nativeEvent.layout.y;
+                    if (isCurrent && !hasScrolledRef.current) {
+                      hasScrolledRef.current = true;
+                      setTimeout(() => {
+                        scrollViewRef.current?.scrollTo({
+                          y: Math.max(0, e.nativeEvent.layout.y - 120),
+                          animated: true,
+                        });
+                      }, 350);
+                    }
+                  }}
+                >
                   {/* Timeline */}
                   <View className="w-6 items-center">
                     {!isFirst && <View style={{ flex: 1, width: 2, backgroundColor: lineColorAbove }} />}
@@ -699,34 +723,13 @@ export default function TrainDetailScreen() {
               <Ionicons name="close" size={24} color={dark ? '#E5E7EB' : '#374151'} />
             </TouchableOpacity>
           </View>
-          {mapHtml ? (
-            <WebView
-              ref={webviewRef}
-              source={{ html: mapHtml }}
-              style={{ flex: 1 }}
-              originWhitelist={['*']}
-              javaScriptEnabled domStorageEnabled geolocationEnabled
-              onMessage={(event) => {
-                try {
-                  const msg = JSON.parse(event.nativeEvent.data);
-                  if (msg.type === 'railPath' && msg.path && mapCacheKeyRef.current) {
-                    saveMapRouteCache(mapCacheKeyRef.current, msg.path);
-                  }
-                } catch { }
-              }}
-              onLoad={() => {
-                if (userLocation) {
-                  webviewRef.current?.injectJavaScript(
-                    `window.setUserLocation(${userLocation.lat},${userLocation.lon});true;`
-                  );
-                }
-              }}
-            />
-          ) : (
-            <View className="flex-1 justify-center items-center">
-              <ActivityIndicator size="large" color="#0066CC" />
-            </View>
-          )}
+          <CrossPlatformMapView
+            html={mapHtml}
+            handleRef={(h) => { mapHandleRef.current = h; }}
+            onRailPath={(path) => {
+              if (mapCacheKeyRef.current) saveMapRouteCache(mapCacheKeyRef.current, path);
+            }}
+          />
         </View>
       </Modal>
 
