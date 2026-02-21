@@ -1,0 +1,122 @@
+{
+    "common": {
+        "onTime": "La timp",
+        "delayed": "Întârziat",
+        "scheduled": "programat",
+        "estimated": "estimat",
+        "platform": "Linia",
+        "stop": "oprire",
+        "stops": "Opriri",
+        "loading": "Se încarcă…",
+        "error": "Eroare",
+        "retry": "Reîncearcă",
+        "cancel": "Anulează",
+        "send": "Trimite",
+        "add": "Adaugă",
+        "back": "Acasă",
+        "arrival": "Sosire",
+        "departure": "Plecare",
+        "arr": "Sos",
+        "dep": "Pl",
+        "next": "URMEAZĂ",
+        "noData": "Nu sunt date disponibile"
+    },
+    "home": {
+        "searchTrain": "CAUTĂ TREN",
+        "placeholder": "Ex: IR 1732",
+        "search": "Caută",
+        "recentSearches": "CĂUTĂRI RECENTE",
+        "clearAll": "Șterge tot",
+        "noRecent": "Nicio căutare recentă.",
+        "favorites": "TRENURI FAVORITE",
+        "noFavorites": "Niciun tren favorit."
+    },
+    "trainDetail": {
+        "stops": "OPRIRI",
+        "reports": "RAPOARTE CĂLĂTORI",
+        "addReport": "ADAUGĂ",
+        "noReports": "Trenul nu are niciun raport momentan.",
+        "notifOn": "Notificări activate ✅",
+        "notifOnMsg": "Vei fi alertat când trenul {{train}} are întârzieri.",
+        "notifOff": "Notificări dezactivate",
+        "notifOffMsg": "Nu vei mai primi alerte pentru trenul {{train}}.",
+        "notifNeeded": "Permisiune necesară",
+        "notifNeededMsg": "Activează notificările din Setările dispozitivului.",
+        "watchingMsg": "Vei fi notificat la întârzieri pentru acest tren",
+        "stopWatching": "Oprește",
+        "selectRoute": "SELECTEAZĂ RUTA",
+        "noStops": "Nu sunt opriri disponibile",
+        "mapTitle": "Harta rutei · {{train}}",
+        "reportTitle": "Adaugă raport",
+        "reportWhat": "Ce se întâmplă?",
+        "reportDetails": "Detalii (opțional)",
+        "reportPlaceholder": "Ex: Nu sunt locuri în vagonul 3...",
+        "reportSend": "TRIMITE RAPORT",
+        "reportSent": "Raport trimis",
+        "reportSentMsg": "Mulțumim pentru contribuție! Raportul tău ajută alți călători.",
+        "reportError": "Nu am putut trimite raportul."
+    },
+    "station": {
+        "departures": "PLECĂRI",
+        "arrivals": "SOSIRI",
+        "departureTable": "Tabelă plecări",
+        "arrivalTable": "Tabelă sosiri",
+        "retroMode": "Tabel Mecanic",
+        "noDepartures": "Nu sunt plecări disponibile",
+        "noArrivals": "Nu sunt sosiri disponibile",
+        "to": "→",
+        "from": "←"
+    },
+    "search": {
+        "title": "Caută Tren",
+        "placeholder": "Număr tren sau rută…",
+        "recentSearches": "CĂUTĂRI RECENTE",
+        "results": "REZULTATE",
+        "noResults": "Niciun tren găsit.",
+        "searching": "Se caută…"
+    },
+    "myTrains": {
+        "watching": "TRENURI URMĂRITE",
+        "favorites": "FAVORITE",
+        "noWatching": "Nu urmărești niciun tren.",
+        "noFavorites": "Niciun tren sau stație favorită.",
+        "stations": "STAȚII FAVORITE",
+        "trains": "TRENURI FAVORITE"
+    },
+    "settings": {
+        "title": "Setări",
+        "theme": "MOD VIZUAL",
+        "themeLight": "Luminos",
+        "themeLightDesc": "Fundal alb mereu",
+        "themeDark": "Întunecat",
+        "themeDarkDesc": "Fundal gri-negru",
+        "themeAuto": "Automat",
+        "themeAutoDesc": "Urmează telefonul",
+        "language": "LIMBĂ",
+        "connection": "CONEXIUNE BACKEND",
+        "checkAgain": "VERIFICĂ DIN NOU",
+        "about": "DESPRE",
+        "appName": "Trenul Meu v1.1",
+        "appDesc": "Aplicație pentru urmărirea trenurilor CFR Călători în timp real. Datele provin din surse oficiale (data.gov.ro).",
+        "badges": [
+            "Timp real",
+            "Alerte întârzieri",
+            "Mod întunecat",
+            "Istoric"
+        ]
+    },
+    "tabs": {
+        "home": "Acasă",
+        "search": "Caută",
+        "trains": "Trenurile mele",
+        "stations": "Stații",
+        "settings": "Setări"
+    },
+    "reportTypes": {
+        "aglomerat": "Aglomerat",
+        "aer_conditionat_defect": "Aer condiționat defect",
+        "oprit_in_camp": "Oprit în câmp",
+        "intarziat": "Întârziat",
+        "altceva": "Altceva"
+    }
+}

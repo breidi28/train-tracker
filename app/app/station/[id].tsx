@@ -7,7 +7,9 @@ import { useLocalSearchParams, Stack, Link } from 'expo-router';
 import { fetchStationDepartures, fetchStationArrivals } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { getFavoriteStations, toggleFavoriteStation } from '../../src/storage';
+
 
 interface TimetableItem {
   train_id?: string;
@@ -56,6 +58,7 @@ function isTimePast(timeStr: string | undefined): boolean {
 export default function StationDetailScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const { dark } = useTheme();
+  const { t } = useTranslation();
 
   const [tab, setTab] = useState<Tab>('departures');
   const [showRetro, setShowRetro] = useState(false);
@@ -144,7 +147,7 @@ export default function StationDetailScreen() {
     return (
       <View className={`flex-1 justify-center items-center ${bg}`}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text className={`mt-3 text-sm ${subTxt}`}>Se încarcă orarul…</Text>
+        <Text className={`mt-3 text-sm ${subTxt}`}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -159,7 +162,7 @@ export default function StationDetailScreen() {
           onPress={load}
           activeOpacity={0.8}
         >
-          <Text className="text-white font-bold">Reîncearcă</Text>
+          <Text className="text-white font-bold">{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -186,18 +189,18 @@ export default function StationDetailScreen() {
 
         {/* ── Tab switcher ─────────────────────────────────────────────── */}
         <View className={`flex-row mx-4 mt-3 border-b ${tabBar} rounded-t-xl`}>
-          {(['departures', 'arrivals'] as Tab[]).map(t => {
-            const active = tab === t;
+          {(['departures', 'arrivals'] as Tab[]).map(tabKey => {
+            const active = tab === tabKey;
             return (
               <TouchableOpacity
-                key={t}
+                key={tabKey}
                 activeOpacity={1}
                 className={`flex-1 py-3 items-center flex-row justify-center ${active ? `border-b-2 border-primary` : ''
                   }`}
-                onPress={() => setTab(t)}
+                onPress={() => setTab(tabKey)}
               >
                 <Ionicons
-                  name={t === 'departures' ? 'arrow-up-circle' : 'arrow-down-circle'}
+                  name={tabKey === 'departures' ? 'arrow-up-circle' : 'arrow-down-circle'}
                   size={18}
                   color={active ? '#0066CC' : dark ? '#6B7280' : '#9CA3AF'}
                 />
@@ -205,7 +208,7 @@ export default function StationDetailScreen() {
                   className={`font-semibold text-sm ml-2 ${active ? 'text-primary' : subTxt
                     }`}
                 >
-                  {t === 'departures' ? `PLECĂRI (${departures.length})` : `SOSIRI (${arrivals.length})`}
+                  {tabKey === 'departures' ? `${t('station.departures')} (${departures.length})` : `${t('station.arrivals')} (${arrivals.length})`}
                 </Text>
                 {active && hasLiveData && (
                   <View className="ml-2 bg-red-500 w-2 h-2 rounded-full" />
@@ -218,7 +221,7 @@ export default function StationDetailScreen() {
         {/* ── Mode bar (retro toggle) ───────────────────────────────── */}
         <View className={`flex-row justify-between items-center px-4 py-2 border-b ${modBar}`}>
           <Text className={`text-xs font-bold tracking-widest uppercase ${subTxt}`}>
-            {tab === 'departures' ? 'Tabelă plecări' : 'Tabelă sosiri'}
+            {tab === 'departures' ? t('station.departureTable') : t('station.arrivalTable')}
           </Text>
           <TouchableOpacity
             onPress={() => setShowRetro(!showRetro)}
@@ -267,7 +270,7 @@ export default function StationDetailScreen() {
                   color={dark ? '#374151' : '#D1D5DB'}
                 />
                 <Text className={`text-sm mt-4 ${subTxt}`}>
-                  Nu sunt {tab === 'departures' ? 'plecări' : 'sosiri'} disponibile
+                  {tab === 'departures' ? t('station.noDepartures') : t('station.noArrivals')}
                 </Text>
               </View>
             }
@@ -296,7 +299,7 @@ export default function StationDetailScreen() {
                         <View className="flex-1">
                           <Text className={`text-base font-semibold ${headTxt}`}>{trainLabel}</Text>
                           <Text className={`text-xs mt-0.5 ${subTxt}`} numberOfLines={1}>
-                            {tab === 'departures' ? `→ ${item.destination ?? '—'}` : `← ${item.origin ?? '—'}`}
+                            {tab === 'departures' ? `${t('station.to')} ${item.destination ?? '—'}` : `${t('station.from')} ${item.origin ?? '—'}`}
                           </Text>
                         </View>
                         <View className="items-end ml-2">
@@ -343,7 +346,7 @@ export default function StationDetailScreen() {
             {data.length === 0 ? (
               <View className="items-center mt-20">
                 <Ionicons name={tab === 'departures' ? 'arrow-up-circle-outline' : 'arrow-down-circle-outline'} size={64} color={dark ? '#374151' : '#D1D5DB'} />
-                <Text className={`text-sm mt-4 ${subTxt}`}>Nu sunt {tab === 'departures' ? 'plecări' : 'sosiri'} disponibile</Text>
+                <Text className={`text-sm mt-4 ${subTxt}`}>{tab === 'departures' ? t('station.noDepartures') : t('station.noArrivals')}</Text>
               </View>
             ) : (
               <View className="mx-4 mt-3 rounded-xl overflow-hidden" style={{ backgroundColor: '#0A0A0A', borderWidth: 3, borderColor: '#27272A' }}>

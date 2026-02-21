@@ -7,6 +7,8 @@ import { useRouter } from 'expo-router';
 import { fetchStations } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
+import { useTranslation } from 'react-i18next';
+
 
 interface Station {
   name: string;
@@ -17,6 +19,7 @@ interface Station {
 export default function StationsScreen() {
   const router = useRouter();
   const { dark } = useTheme();
+  const { t } = useTranslation();
 
   const [stations, setStations] = useState<Station[]>([]);
   const [filtered, setFiltered] = useState<Station[]>([]);
@@ -31,7 +34,7 @@ export default function StationsScreen() {
         setStations(data);
         setFiltered(data);
       } catch {
-        setError('Nu s-au putut încărca stațiile');
+        setError(t('common.error'));
       } finally {
         setLoading(false);
       }
@@ -55,7 +58,7 @@ export default function StationsScreen() {
     return (
       <View className={`flex-1 justify-center items-center ${bg}`}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text className={`mt-3 ${subTxt}`}>Se încarcă stațiile…</Text>
+        <Text className={`mt-3 ${subTxt}`}>{t('common.loading')}</Text>
       </View>
     );
   }
@@ -69,7 +72,7 @@ export default function StationsScreen() {
           className="bg-primary rounded-xl px-6 py-3 mt-4"
           onPress={() => { setLoading(true); setError(''); }}
         >
-          <Text className="text-white font-bold">Reîncearcă</Text>
+          <Text className="text-white font-bold">{t('common.retry')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -80,7 +83,7 @@ export default function StationsScreen() {
       <View className={`px-4 pt-4 pb-3 border-b ${card}`}>
         <TextInput
           className={`border rounded-xl px-4 py-3 text-base ${inputBg}`}
-          placeholder="Filtrează stații…"
+          placeholder={t('search.placeholder')}
           placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
           value={query}
           onChangeText={setQuery}
@@ -110,7 +113,7 @@ export default function StationsScreen() {
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <Text className={`text-center mt-8 ${subTxt}`}>Nicio stație găsită</Text>
+          <Text className={`text-center mt-8 ${subTxt}`}>{t('search.noResults')}</Text>
         }
       />
     </View>

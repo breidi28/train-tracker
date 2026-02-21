@@ -1,0 +1,122 @@
+{
+    "common": {
+        "onTime": "Menetrend szerint",
+        "delayed": "Késő",
+        "scheduled": "tervezett",
+        "estimated": "becsült",
+        "platform": "Vágány",
+        "stop": "megálló",
+        "stops": "Megállók",
+        "loading": "Betöltés…",
+        "error": "Hiba",
+        "retry": "Újra",
+        "cancel": "Mégse",
+        "send": "Küldés",
+        "add": "Hozzáadás",
+        "back": "Főoldal",
+        "arrival": "Érkezés",
+        "departure": "Indulás",
+        "arr": "Érk",
+        "dep": "Ind",
+        "next": "KÖVETKEZŐ",
+        "noData": "Nincs elérhető adat"
+    },
+    "home": {
+        "searchTrain": "VONAT KERESÉSE",
+        "placeholder": "Pl.: IR 1732",
+        "search": "Keresés",
+        "recentSearches": "LEGUTÓBBI KERESÉSEK",
+        "clearAll": "Törlés",
+        "noRecent": "Nincs korábbi keresés.",
+        "favorites": "KEDVENC VONATOK",
+        "noFavorites": "Nincs kedvenc vonat."
+    },
+    "trainDetail": {
+        "stops": "MEGÁLLÓK",
+        "reports": "UTASJELENTÉSEK",
+        "addReport": "HOZZÁAD",
+        "noReports": "Ehhez a vonathoz még nincs jelentés.",
+        "notifOn": "Értesítések bekapcsolva ✅",
+        "notifOnMsg": "Értesítést kap, ha a {{train}} vonat késik.",
+        "notifOff": "Értesítések kikapcsolva",
+        "notifOffMsg": "Nem kap több értesítést a {{train}} vonatról.",
+        "notifNeeded": "Engedély szükséges",
+        "notifNeededMsg": "Engedélyezze az értesítéseket a készülék beállításaiban.",
+        "watchingMsg": "Értesítést kap a vonat késéseiről",
+        "stopWatching": "Leállítás",
+        "selectRoute": "ÚTVONAL KIVÁLASZTÁSA",
+        "noStops": "Nincs elérhető megálló",
+        "mapTitle": "Útvonaltérkép · {{train}}",
+        "reportTitle": "Jelentés hozzáadása",
+        "reportWhat": "Mi történik?",
+        "reportDetails": "Részletek (opcionális)",
+        "reportPlaceholder": "Pl.: Nincs hely a 3. kocsiban…",
+        "reportSend": "JELENTÉS KÜLDÉSE",
+        "reportSent": "Jelentés elküldve",
+        "reportSentMsg": "Köszönjük! Az Ön jelentése segít a többi utasnak.",
+        "reportError": "Nem sikerült elküldeni a jelentést."
+    },
+    "station": {
+        "departures": "INDULÁSOK",
+        "arrivals": "ÉRKEZÉSEK",
+        "departureTable": "Indulási tábla",
+        "arrivalTable": "Érkezési tábla",
+        "retroMode": "Pergő tábla",
+        "noDepartures": "Nincs elérhető indulás",
+        "noArrivals": "Nincs elérhető érkezés",
+        "to": "→",
+        "from": "←"
+    },
+    "search": {
+        "title": "Vonat keresése",
+        "placeholder": "Vonatszám vagy útvonal…",
+        "recentSearches": "LEGUTÓBBI KERESÉSEK",
+        "results": "EREDMÉNYEK",
+        "noResults": "Nem találtunk vonatot.",
+        "searching": "Keresés…"
+    },
+    "myTrains": {
+        "watching": "FIGYELT VONATOK",
+        "favorites": "KEDVENCEK",
+        "noWatching": "Nem figyel egyetlen vonatot sem.",
+        "noFavorites": "Nincs kedvenc vonat vagy állomás.",
+        "stations": "KEDVENC ÁLLOMÁSOK",
+        "trains": "KEDVENC VONATOK"
+    },
+    "settings": {
+        "title": "Beállítások",
+        "theme": "MEGJELENÉS",
+        "themeLight": "Világos",
+        "themeLightDesc": "Mindig fehér háttér",
+        "themeDark": "Sötét",
+        "themeDarkDesc": "Sötét háttér",
+        "themeAuto": "Automatikus",
+        "themeAutoDesc": "Eszköz beállítása szerint",
+        "language": "NYELV",
+        "connection": "HÁTTÉRRENDSZER KAPCSOLAT",
+        "checkAgain": "ELLENŐRZÉS ÚJRA",
+        "about": "NÉVJEGY",
+        "appName": "Trenul Meu v1.1",
+        "appDesc": "Valós idejű nyomkövető alkalmazás a CFR Călători vonataihoz. Az adatok hivatalos kormányzati forrásból származnak (data.gov.ro).",
+        "badges": [
+            "Valós idejű",
+            "Késési értesítések",
+            "Sötét mód",
+            "Előzmények"
+        ]
+    },
+    "tabs": {
+        "home": "Főoldal",
+        "search": "Keresés",
+        "trains": "Vonataim",
+        "stations": "Állomások",
+        "settings": "Beállítások"
+    },
+    "reportTypes": {
+        "aglomerat": "Zsúfolt",
+        "aer_conditionat_defect": "Klíma meghibásodott",
+        "oprit_in_camp": "Mezőn megállt",
+        "intarziat": "Késik",
+        "altceva": "Egyéb"
+    }
+}

@@ -5,12 +5,14 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { searchTrains } from '../../src/api';
 import {
   getRecentSearches, clearRecentSearches, type RecentTrain,
   getFavoriteTrains, getFavoriteStations, type FavoriteItem
 } from '../../src/storage';
 import { useTheme } from '../../src/ThemeContext';
+
 
 // Badge colours per train category
 const CATEGORY_COLORS: Record<string, string> = {
@@ -24,6 +26,7 @@ function categoryColor(trainNumber: string): string {
 export default function HomeScreen() {
   const router = useRouter();
   const { dark } = useTheme();
+  const { t } = useTranslation();
 
   const [trainNumber, setTrainNumber] = useState('');
   const [error, setError] = useState('');
@@ -65,7 +68,7 @@ export default function HomeScreen() {
 
   const handleSearch = () => {
     const q = trainNumber.trim();
-    if (!q) { setError('Introduceți numărul trenului'); return; }
+    if (!q) { setError(t('home.placeholder')); return; }
     setError('');
     setShowSuggestions(false);
     Keyboard.dismiss();
@@ -100,8 +103,8 @@ export default function HomeScreen() {
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <View className="bg-primary px-6 pt-8 pb-14">
-          <Text className="text-white text-3xl font-bold mb-1">Caută trenul tău</Text>
-          <Text className="text-blue-100 text-sm">Urmărește trenul în timp real</Text>
+          <Text className="text-white text-3xl font-bold mb-1">{t('home.searchTrain')}</Text>
+          <Text className="text-blue-100 text-sm">CFR Train Tracker</Text>
         </View>
 
         {/* ── Search card ──────────────────────────────────────────────── */}
@@ -109,7 +112,7 @@ export default function HomeScreen() {
           <View className={`border rounded-2xl overflow-hidden shadow-sm ${card}`}>
             <View className="p-4">
               <Text className={`font-bold mb-3 text-xs tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
-                CAUTĂ TREN
+                {t('home.searchTrain')}
               </Text>
               <View className="flex-row gap-3">
                 <TextInput
@@ -124,7 +127,7 @@ export default function HomeScreen() {
                     paddingBottom: Platform.OS === 'ios' ? 0 : undefined,
                     includeFontPadding: false,
                   } as any}
-                  placeholder="Ex: IR 1732"
+                  placeholder={t('home.placeholder')}
                   placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
                   value={trainNumber}
                   onChangeText={setTrainNumber}
@@ -181,10 +184,10 @@ export default function HomeScreen() {
           <View className="px-4 mt-5">
             <View className="flex-row items-center justify-between mb-3">
               <Text className={`text-xs font-bold tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>
-                CĂUTĂRI RECENTE
+                {t('home.recentSearches')}
               </Text>
               <TouchableOpacity onPress={handleClearRecents} activeOpacity={0.7}>
-                <Text className="text-primary text-xs font-semibold">Șterge tot</Text>
+                <Text className="text-primary text-xs font-semibold">{t('home.clearAll')}</Text>
               </TouchableOpacity>
             </View>
             <View className={`border rounded-2xl overflow-hidden ${card}`}>
@@ -219,7 +222,7 @@ export default function HomeScreen() {
         {favTrains.length > 0 && (
           <View className="px-4 mt-5">
             <View className="flex-row items-center mb-3">
-              <Text className={`text-xs font-bold tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>TRENURI FAVORITE</Text>
+              <Text className={`text-xs font-bold tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>{t('home.favorites')}</Text>
             </View>
             <View className={`border rounded-2xl overflow-hidden ${card}`}>
               {favTrains.map((t, i) => (
@@ -245,7 +248,7 @@ export default function HomeScreen() {
         {favStations.length > 0 && (
           <View className="px-4 mt-5">
             <View className="flex-row items-center mb-3">
-              <Text className={`text-xs font-bold tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>STAȚII FAVORITE</Text>
+              <Text className={`text-xs font-bold tracking-widest ${dark ? 'text-gray-500' : 'text-gray-400'}`}>{t('myTrains.stations')}</Text>
             </View>
             <View className={`border rounded-2xl overflow-hidden ${card}`}>
               {favStations.map((s, i) => (

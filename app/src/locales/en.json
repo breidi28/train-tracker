@@ -1,0 +1,122 @@
+{
+    "common": {
+        "onTime": "On time",
+        "delayed": "Delayed",
+        "scheduled": "scheduled",
+        "estimated": "estimated",
+        "platform": "Track",
+        "stop": "stop",
+        "stops": "Stops",
+        "loading": "Loading…",
+        "error": "Error",
+        "retry": "Retry",
+        "cancel": "Cancel",
+        "send": "Send",
+        "add": "Add",
+        "back": "Home",
+        "arrival": "Arrival",
+        "departure": "Departure",
+        "arr": "Arr",
+        "dep": "Dep",
+        "next": "NEXT",
+        "noData": "No data available"
+    },
+    "home": {
+        "searchTrain": "SEARCH TRAIN",
+        "placeholder": "Ex: IR 1732",
+        "search": "Search",
+        "recentSearches": "RECENT SEARCHES",
+        "clearAll": "Clear all",
+        "noRecent": "No recent searches.",
+        "favorites": "FAVOURITE TRAINS",
+        "noFavorites": "No favourite trains."
+    },
+    "trainDetail": {
+        "stops": "STOPS",
+        "reports": "PASSENGER REPORTS",
+        "addReport": "ADD",
+        "noReports": "No reports for this train yet.",
+        "notifOn": "Notifications enabled ✅",
+        "notifOnMsg": "You will be alerted when train {{train}} is delayed.",
+        "notifOff": "Notifications disabled",
+        "notifOffMsg": "You will no longer receive alerts for train {{train}}.",
+        "notifNeeded": "Permission required",
+        "notifNeededMsg": "Enable notifications in your device settings.",
+        "watchingMsg": "You will be notified of delays for this train",
+        "stopWatching": "Stop",
+        "selectRoute": "SELECT ROUTE",
+        "noStops": "No stops available",
+        "mapTitle": "Route map · {{train}}",
+        "reportTitle": "Add report",
+        "reportWhat": "What's happening?",
+        "reportDetails": "Details (optional)",
+        "reportPlaceholder": "Ex: No seats in car 3...",
+        "reportSend": "SEND REPORT",
+        "reportSent": "Report sent",
+        "reportSentMsg": "Thank you! Your report helps other passengers.",
+        "reportError": "Could not send the report."
+    },
+    "station": {
+        "departures": "DEPARTURES",
+        "arrivals": "ARRIVALS",
+        "departureTable": "Departures board",
+        "arrivalTable": "Arrivals board",
+        "retroMode": "Flip Board",
+        "noDepartures": "No departures available",
+        "noArrivals": "No arrivals available",
+        "to": "→",
+        "from": "←"
+    },
+    "search": {
+        "title": "Search Train",
+        "placeholder": "Train number or route…",
+        "recentSearches": "RECENT SEARCHES",
+        "results": "RESULTS",
+        "noResults": "No trains found.",
+        "searching": "Searching…"
+    },
+    "myTrains": {
+        "watching": "WATCHED TRAINS",
+        "favorites": "FAVOURITES",
+        "noWatching": "You are not watching any trains.",
+        "noFavorites": "No favourite trains or stations.",
+        "stations": "FAVOURITE STATIONS",
+        "trains": "FAVOURITE TRAINS"
+    },
+    "settings": {
+        "title": "Settings",
+        "theme": "APPEARANCE",
+        "themeLight": "Light",
+        "themeLightDesc": "Always white background",
+        "themeDark": "Dark",
+        "themeDarkDesc": "Dark grey background",
+        "themeAuto": "Automatic",
+        "themeAutoDesc": "Follows system setting",
+        "language": "LANGUAGE",
+        "connection": "BACKEND CONNECTION",
+        "checkAgain": "CHECK AGAIN",
+        "about": "ABOUT",
+        "appName": "Trenul Meu v1.1",
+        "appDesc": "Real-time tracking app for CFR Călători trains. Data sourced from official government records (data.gov.ro).",
+        "badges": [
+            "Real-time",
+            "Delay alerts",
+            "Dark mode",
+            "History"
+        ]
+    },
+    "tabs": {
+        "home": "Home",
+        "search": "Search",
+        "trains": "My Trains",
+        "stations": "Stations",
+        "settings": "Settings"
+    },
+    "reportTypes": {
+        "aglomerat": "Crowded",
+        "aer_conditionat_defect": "A/C broken",
+        "oprit_in_camp": "Stopped in field",
+        "intarziat": "Delayed",
+        "altceva": "Other"
+    }
+}

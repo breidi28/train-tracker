@@ -10,6 +10,8 @@ import { useLocalSearchParams, Stack } from 'expo-router';
 import { fetchTrain, fetchTrainReports, submitTrainReport } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+
 import {
   isTrainWatched, addWatchedTrain, removeWatchedTrain, requestNotificationPermission,
 } from '../../src/notifications';
@@ -174,7 +176,9 @@ function DelayChart({ history, dark }: { history: DelaySnapshot[]; dark: boolean
 export default function TrainDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { dark } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
+
 
   const [train, setTrain] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -296,11 +300,13 @@ export default function TrainDetailScreen() {
       if (watching) {
         await removeWatchedTrain(trainNumber);
         setWatching(false);
-        Alert.alert('Notificări dezactivate', `Nu vei mai primi alerte pentru trenul ${trainNumber}.`);
+        Alert.alert(t('trainDetail.notifOn'), t('trainDetail.notifOnMsg', { train: trainNumber }));
+
       } else {
         const granted = await requestNotificationPermission();
         if (!granted) {
-          Alert.alert('Permisiune necesară', 'Activează notificările din Setările dispozitivului.');
+          Alert.alert(t('trainDetail.notifNeeded'), t('trainDetail.notifNeededMsg'));
+
           return;
         }
         await addWatchedTrain({
@@ -309,7 +315,8 @@ export default function TrainDetailScreen() {
           addedAt: new Date().toISOString().split('T')[0],
         });
         setWatching(true);
-        Alert.alert('Notificări activate ✅', `Vei fi alertat când trenul ${trainNumber} are întârzieri.`);
+        Alert.alert(t('trainDetail.notifOn'), t('trainDetail.notifOnMsg', { train: trainNumber }));
+
       }
     } finally {
       setNotifLoading(false);
@@ -454,10 +461,10 @@ export default function TrainDetailScreen() {
             <View className="bg-amber-50 border-b border-amber-100 px-4 py-2 flex-row items-center">
               <Ionicons name="notifications" size={14} color="#F59E0B" />
               <Text className="text-amber-700 text-xs ml-1.5 flex-1">
-                Vei fi notificat la întârzieri pentru acest tren
+                {t('trainDetail.watchingMsg')}
               </Text>
               <TouchableOpacity onPress={handleToggleNotification} activeOpacity={0.7}>
-                <Text className="text-amber-600 text-xs font-semibold">Oprește</Text>
+                <Text className="text-amber-600 text-xs font-semibold">{t('trainDetail.stopWatching')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -499,7 +506,7 @@ export default function TrainDetailScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="chatbubbles" size={16} color="#0066CC" />
-                <Text className={`text-xs font-bold tracking-widest ml-2 ${subText}`}>RAPOARTE CĂLĂTORI</Text>
+                <Text className={`text-xs font-bold tracking-widest ml-2 ${subText}`}>{t('trainDetail.reports')}</Text>
                 {reports.length > 0 && (
                   <View className="ml-2 bg-blue-600 rounded-full w-5 h-5 items-center justify-center">
                     <Text className="text-white text-[10px] font-bold">{reports.length}</Text>
@@ -513,7 +520,7 @@ export default function TrainDetailScreen() {
                   className="bg-primary rounded-lg px-3 py-1.5 flex-row items-center"
                 >
                   <Ionicons name="add" size={14} color="#fff" />
-                  <Text className="text-white text-xs font-bold ml-1">ADAUGĂ</Text>
+                  <Text className="text-white text-xs font-bold ml-1">{t('trainDetail.addReport')}</Text>
                 </TouchableOpacity>
                 <Ionicons
                   name={showReports ? 'chevron-up' : 'chevron-down'}
@@ -526,7 +533,7 @@ export default function TrainDetailScreen() {
             {showReports && (
               <View className={`px-4 pb-4 border-t ${divider}`}>
                 {reports.length === 0 ? (
-                  <Text className={`text-center py-4 ${subText}`}>Trenul nu are niciun raport momentan.</Text>
+                  <Text className={`text-center py-4 ${subText}`}>{t('trainDetail.noReports')}</Text>
                 ) : (
                   reports.map((rep, i) => (
                     <View key={i} className={`py-3 ${i < reports.length - 1 ? `border-b ${divider}` : ''}`}>
@@ -548,7 +555,7 @@ export default function TrainDetailScreen() {
           {/* ── Stops ─────────────────────────────────────────────────── */}
           <View className={`mt-3 mx-4 border rounded-2xl px-4 py-4 ${card}`}>
             <Text className={`text-xs font-bold tracking-widest mb-4 ${subText}`}>
-              OPRIRI ({stops.length})
+              {t('trainDetail.stops')} ({stops.length})
             </Text>
             {stops.map((stop, i) => {
               const name = stop.station_name ?? stop.stationName ?? '-';
@@ -605,7 +612,7 @@ export default function TrainDetailScreen() {
                       </Text>
                       {isCurrent && (
                         <View className="bg-blue-600 rounded-full px-2 py-0.5">
-                          <Text className="text-white text-[10px] font-bold">URMEAZĂ</Text>
+                          <Text className="text-white text-[10px] font-bold">{t('common.next')}</Text>
                         </View>
                       )}
                     </View>
@@ -672,7 +679,7 @@ export default function TrainDetailScreen() {
               );
             })}
             {stops.length === 0 && (
-              <Text className={`text-center py-4 ${subText}`}>Nu sunt opriri disponibile</Text>
+              <Text className={`text-center py-4 ${subText}`}>{t('trainDetail.noStops')}</Text>
             )}
           </View>
         </View>
@@ -728,13 +735,13 @@ export default function TrainDetailScreen() {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
           <View className={`p-6 rounded-t-3xl ${dark ? 'bg-gray-900' : 'bg-white'}`}>
             <View className="flex-row justify-between items-center mb-5">
-              <Text className={`text-lg font-bold ${headText}`}>Adaugă raport</Text>
+              <Text className={`text-lg font-bold ${headText}`}>{t('trainDetail.reportTitle')}</Text>
               <TouchableOpacity onPress={() => setShowReportModal(false)} className="p-1" activeOpacity={0.7}>
                 <Ionicons name="close-circle" size={24} color={dark ? '#6B7280' : '#D1D5DB'} />
               </TouchableOpacity>
             </View>
 
-            <Text className={`text-sm mb-2 ${headText} font-semibold`}>Ce se întâmplă?</Text>
+            <Text className={`text-sm mb-2 ${headText} font-semibold`}>{t('trainDetail.reportWhat')}</Text>
             <View className="flex-row flex-wrap gap-2 mb-4">
               {['aglomerat', 'aer_conditionat_defect', 'oprit_in_camp', 'intarziat', 'altceva'].map(type => (
                 <TouchableOpacity
@@ -743,19 +750,19 @@ export default function TrainDetailScreen() {
                   className={`rounded-xl px-3 py-2 border ${reportType === type ? 'bg-primary border-primary' : `border-gray-300 ${dark ? 'bg-gray-800' : 'bg-white'}`}`}
                 >
                   <Text className={`text-sm font-medium ${reportType === type ? 'text-white' : subText}`}>
-                    {type.replace(/_/g, ' ').toUpperCase()}
+                    {t(`reportTypes.${type}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text className={`text-sm mb-2 ${headText} font-semibold`}>Detalii (opțional)</Text>
+            <Text className={`text-sm mb-2 ${headText} font-semibold`}>{t('trainDetail.reportDetails')}</Text>
             <View className="border border-gray-300 dark:border-gray-700 rounded-xl px-4 py-3 mb-6">
               <Text style={{ display: 'none' }} /* keep tailwind responsive */ />
               <TextInput
                 value={reportMessage}
                 onChangeText={setReportMessage}
-                placeholder="Ex: Nu sunt locuri în vagonul 3..."
+                placeholder={t('trainDetail.reportPlaceholder')}
                 placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
                 multiline
                 numberOfLines={3}
@@ -772,7 +779,7 @@ export default function TrainDetailScreen() {
               {reportLoading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text className="text-white font-bold text-base">TRIMITE RAPORT</Text>
+                <Text className="text-white font-bold text-base">{t('trainDetail.reportSend')}</Text>
               )}
             </TouchableOpacity>
           </View>

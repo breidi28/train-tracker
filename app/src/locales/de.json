@@ -1,0 +1,122 @@
+{
+    "common": {
+        "onTime": "Pünktlich",
+        "delayed": "Verspätet",
+        "scheduled": "planmäßig",
+        "estimated": "geschätzt",
+        "platform": "Gleis",
+        "stop": "Halt",
+        "stops": "Halte",
+        "loading": "Wird geladen…",
+        "error": "Fehler",
+        "retry": "Erneut versuchen",
+        "cancel": "Abbrechen",
+        "send": "Senden",
+        "add": "Hinzufügen",
+        "back": "Start",
+        "arrival": "Ankunft",
+        "departure": "Abfahrt",
+        "arr": "Ank",
+        "dep": "Abf",
+        "next": "NÄCHSTER",
+        "noData": "Keine Daten verfügbar"
+    },
+    "home": {
+        "searchTrain": "ZUG SUCHEN",
+        "placeholder": "z.B.: IR 1732",
+        "search": "Suche",
+        "recentSearches": "LETZTE SUCHEN",
+        "clearAll": "Alle löschen",
+        "noRecent": "Keine letzten Suchen.",
+        "favorites": "LIEBLINGSZÜGE",
+        "noFavorites": "Keine Lieblingszüge."
+    },
+    "trainDetail": {
+        "stops": "HALTE",
+        "reports": "FAHRGASTBERICHTE",
+        "addReport": "HINZUFÜGEN",
+        "noReports": "Keine Berichte für diesen Zug.",
+        "notifOn": "Benachrichtigungen aktiviert ✅",
+        "notifOnMsg": "Sie werden bei Verspätungen des Zuges {{train}} benachrichtigt.",
+        "notifOff": "Benachrichtigungen deaktiviert",
+        "notifOffMsg": "Sie erhalten keine Benachrichtigungen mehr für den Zug {{train}}.",
+        "notifNeeded": "Berechtigung erforderlich",
+        "notifNeededMsg": "Aktivieren Sie Benachrichtigungen in den Geräteeinstellungen.",
+        "watchingMsg": "Sie werden bei Verspätungen dieses Zuges benachrichtigt",
+        "stopWatching": "Stopp",
+        "selectRoute": "ROUTE WÄHLEN",
+        "noStops": "Keine Halte verfügbar",
+        "mapTitle": "Streckenkarte · {{train}}",
+        "reportTitle": "Bericht hinzufügen",
+        "reportWhat": "Was passiert?",
+        "reportDetails": "Details (optional)",
+        "reportPlaceholder": "z.B.: Keine Plätze in Wagen 3...",
+        "reportSend": "BERICHT SENDEN",
+        "reportSent": "Bericht gesendet",
+        "reportSentMsg": "Danke! Ihr Bericht hilft anderen Fahrgästen.",
+        "reportError": "Bericht konnte nicht gesendet werden."
+    },
+    "station": {
+        "departures": "ABFAHRTEN",
+        "arrivals": "ANKÜNFTE",
+        "departureTable": "Abfahrtstafel",
+        "arrivalTable": "Ankunftstafel",
+        "retroMode": "Anzeigetafel",
+        "noDepartures": "Keine Abfahrten verfügbar",
+        "noArrivals": "Keine Ankünfte verfügbar",
+        "to": "→",
+        "from": "←"
+    },
+    "search": {
+        "title": "Zug suchen",
+        "placeholder": "Zugnummer oder Strecke…",
+        "recentSearches": "LETZTE SUCHEN",
+        "results": "ERGEBNISSE",
+        "noResults": "Keine Züge gefunden.",
+        "searching": "Wird gesucht…"
+    },
+    "myTrains": {
+        "watching": "BEOBACHTETE ZÜGE",
+        "favorites": "FAVORITEN",
+        "noWatching": "Sie beobachten keine Züge.",
+        "noFavorites": "Keine Lieblingszüge oder -stationen.",
+        "stations": "LIEBLINGSBAHNHÖFE",
+        "trains": "LIEBLINGSZÜGE"
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "theme": "ERSCHEINUNGSBILD",
+        "themeLight": "Hell",
+        "themeLightDesc": "Immer weißer Hintergrund",
+        "themeDark": "Dunkel",
+        "themeDarkDesc": "Dunkler Hintergrund",
+        "themeAuto": "Automatisch",
+        "themeAutoDesc": "Folgt Systemeinstellung",
+        "language": "SPRACHE",
+        "connection": "BACKEND-VERBINDUNG",
+        "checkAgain": "ERNEUT PRÜFEN",
+        "about": "ÜBER",
+        "appName": "Trenul Meu v1.1",
+        "appDesc": "Echtzeit-Tracking-App für CFR Călători Züge. Daten aus offiziellen Regierungsquellen (data.gov.ro).",
+        "badges": [
+            "Echtzeit",
+            "Verspätungsalerts",
+            "Dunkelmodus",
+            "Verlauf"
+        ]
+    },
+    "tabs": {
+        "home": "Start",
+        "search": "Suche",
+        "trains": "Meine Züge",
+        "stations": "Bahnhöfe",
+        "settings": "Einstellungen"
+    },
+    "reportTypes": {
+        "aglomerat": "Überfüllt",
+        "aer_conditionat_defect": "Klimaanlage defekt",
+        "oprit_in_camp": "Im Feld gestoppt",
+        "intarziat": "Verspätet",
+        "altceva": "Sonstiges"
+    }
+}

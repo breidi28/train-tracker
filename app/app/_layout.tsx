@@ -1,11 +1,13 @@
 import "../global.css";
-import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AppState, AppStateStatus, View, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { I18nextProvider } from 'react-i18next';
 import { setupNotificationChannel, pollWatchedTrains } from '../src/notifications';
 import { ThemeProvider, useTheme } from '../src/ThemeContext';
+import i18n, { initI18n } from '../src/i18n';
 
 function AppShell() {
   const { dark } = useTheme();
@@ -45,11 +47,28 @@ function AppShell() {
 }
 
 export default function RootLayout() {
+  const [i18nReady, setI18nReady] = useState(false);
+
+  useEffect(() => {
+    initI18n().then(() => setI18nReady(true));
+  }, []);
+
+  if (!i18nReady) {
+    // Show a minimal splash while i18n loads (< 100ms typically)
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0066CC' }}>
+        <ActivityIndicator color="#fff" size="large" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <AppShell />
-      </ThemeProvider>
+      <I18nextProvider i18n={i18n}>
+        <ThemeProvider>
+          <AppShell />
+        </ThemeProvider>
+      </I18nextProvider>
     </SafeAreaProvider>
   );
 }
