@@ -6,6 +6,7 @@ import {
 import { useRouter } from 'expo-router';
 import { fetchStations } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../src/ThemeContext';
 
 interface Station {
   name: string;
@@ -15,6 +16,8 @@ interface Station {
 
 export default function StationsScreen() {
   const router = useRouter();
+  const { dark } = useTheme();
+
   const [stations, setStations] = useState<Station[]>([]);
   const [filtered, setFiltered] = useState<Station[]>([]);
   const [query, setQuery] = useState('');
@@ -41,18 +44,25 @@ export default function StationsScreen() {
     setFiltered(stations.filter(s => s.name.toLowerCase().includes(q)));
   }, [query, stations]);
 
+  const bg = dark ? 'bg-gray-950' : 'bg-gray-50';
+  const card = dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200';
+  const inputBg = dark ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900';
+  const headTxt = dark ? 'text-white' : 'text-gray-900';
+  const subTxt = dark ? 'text-gray-400' : 'text-gray-500';
+  const divider = dark ? 'border-gray-800' : 'border-gray-100';
+
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50">
+      <View className={`flex-1 justify-center items-center ${bg}`}>
         <ActivityIndicator size="large" color="#0066CC" />
-        <Text className="text-gray-500 mt-3">Se încarcă stațiile…</Text>
+        <Text className={`mt-3 ${subTxt}`}>Se încarcă stațiile…</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-50 px-6">
+      <View className={`flex-1 justify-center items-center ${bg} px-6`}>
         <Ionicons name="alert-circle" size={64} color="#EF4444" />
         <Text className="text-red-500 text-base mt-3 text-center">{error}</Text>
         <TouchableOpacity
@@ -66,12 +76,12 @@ export default function StationsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="px-4 pt-4 pb-3 bg-white border-b border-gray-200">
+    <View className={`flex-1 ${bg}`}>
+      <View className={`px-4 pt-4 pb-3 border-b ${card}`}>
         <TextInput
-          className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-base text-gray-900"
-          placeholder="Filtrează stații..."
-          placeholderTextColor="#9CA3AF"
+          className={`border rounded-xl px-4 py-3 text-base ${inputBg}`}
+          placeholder="Filtrează stații…"
+          placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
           value={query}
           onChangeText={setQuery}
         />
@@ -82,7 +92,7 @@ export default function StationsScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         renderItem={({ item }) => (
           <TouchableOpacity
-            className="bg-white border-b border-gray-100 px-4 py-4 flex-row justify-between items-center"
+            className={`border-b px-4 py-4 flex-row items-center ${dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}
             activeOpacity={0.6}
             onPress={() =>
               router.push({
@@ -91,13 +101,16 @@ export default function StationsScreen() {
               })
             }
           >
-            <Text className="text-base font-semibold text-gray-900 flex-1">{item.name}</Text>
-            {item.region ? <Text className="text-xs text-gray-400 ml-2">{item.region}</Text> : null}
-            <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+            <Ionicons name="location-outline" size={18} color="#0066CC" style={{ marginRight: 10 }} />
+            <Text className={`text-sm font-semibold flex-1 ${headTxt}`}>{item.name}</Text>
+            {item.region ? (
+              <Text className={`text-xs mr-2 ${subTxt}`}>{item.region}</Text>
+            ) : null}
+            <Ionicons name="chevron-forward" size={18} color={dark ? '#4B5563' : '#D1D5DB'} />
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <Text className="text-center text-gray-500 mt-8">Nicio stație găsită</Text>
+          <Text className={`text-center mt-8 ${subTxt}`}>Nicio stație găsită</Text>
         }
       />
     </View>

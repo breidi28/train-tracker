@@ -5,6 +5,7 @@ module.exports = {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
+  darkMode: 'media', // uses the OS/system color scheme
   theme: {
     extend: {
       colors: {
