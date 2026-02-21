@@ -7,12 +7,18 @@ import ro from './locales/ro.json';
 import en from './locales/en.json';
 import de from './locales/de.json';
 import hu from './locales/hu.json';
+import es from './locales/es.json';
+import fr from './locales/fr.json';
+import nl from './locales/nl.json';
 
 export const LANGUAGES = [
     { code: 'ro', label: 'Română', flag: '🇷🇴' },
     { code: 'en', label: 'English', flag: '🇬🇧' },
     { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
     { code: 'hu', label: 'Magyar', flag: '🇭🇺' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
 ] as const;
 
 export type LangCode = typeof LANGUAGES[number]['code'];
@@ -45,7 +51,15 @@ export async function initI18n() {
     await i18n
         .use(initReactI18next)
         .init({
-            resources: { ro: { translation: ro }, en: { translation: en }, de: { translation: de }, hu: { translation: hu } },
+            resources: {
+                ro: { translation: ro },
+                en: { translation: en },
+                de: { translation: de },
+                hu: { translation: hu },
+                es: { translation: es },
+                fr: { translation: fr },
+                nl: { translation: nl },
+            },
             lng,
             fallbackLng: 'ro',
             interpolation: { escapeValue: false },
