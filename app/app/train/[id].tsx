@@ -503,6 +503,20 @@ export default function TrainDetailScreen() {
             </View>
           )}
 
+          {/* ── Train Alerts / Warnings ───────────────────────────────── */}
+          {train?.alerts && train.alerts.length > 0 && (
+            <View className={`px-4 mt-3`}>
+              {train.alerts.map((alert: string, idx: number) => (
+                <View key={idx} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-3 flex-row mb-2">
+                  <Ionicons name="warning" size={18} color="#EF4444" style={{ marginTop: 2 }} />
+                  <Text className="text-red-700 dark:text-red-400 text-sm ml-2 flex-1 flex-wrap">
+                    {alert}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* ── Branch selector ───────────────────────────────────────── */}
           {branches.length > 1 && (
             <View className={`mt-1 px-4 pt-3 pb-2 border-b ${card}`}>
