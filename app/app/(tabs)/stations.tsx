@@ -87,7 +87,7 @@ export default function StationsScreen() {
       <View className={`px-4 pt-4 pb-3 border-b ${card}`}>
         <TextInput
           className={`border rounded-xl px-4 py-3 text-base ${inputBg}`}
-          placeholder={t('search.placeholder')}
+          placeholder={t('station.searchPlaceholder')}
           placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
           value={query}
           onChangeText={setQuery}

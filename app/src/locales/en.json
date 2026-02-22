@@ -102,16 +102,17 @@
         "retroDelay": "DLY.",
         "retroPlatform": "TRCK",
         "onTimShort": "ON TM",
-        "unknown": "UNKNOWN"
+        "unknown": "UNKNOWN",
+        "searchPlaceholder": "Search for a station..."
     },
     "search": {
-        "title": "Search Train",
-        "placeholder": "Train number or route…",
+        "title": "Search",
+        "placeholder": "Train number, route or station…",
         "recentSearches": "RECENT SEARCHES",
         "results": "RESULTS",
-        "noResults": "No trains found.",
+        "noResults": "No results found.",
         "searching": "Searching…",
-        "header": "SEARCH TRAINS",
+        "header": "SEARCH",
         "inputPlaceholder": "Ex: IR, IC 536, Brașov…",
         "suggestions": "Suggestions",
         "searchError": "Search error",

@@ -688,142 +688,178 @@ export default function TrainDetailScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
-            {stops.map((stop, i) => {
-              const name = stop.station_name ?? stop.stationName ?? '-';
-              const arr = stop.arrival_time ?? stop.arrivalTime ?? '';
-              const dep = stop.departure_time ?? stop.departureTime ?? '';
-              const delay = stop.delay ?? stop.delay_minutes ?? 0;
-              const isFirst = i === 0;
-              const isLast = i === stops.length - 1;
 
-              // Determine whether this stop has been passed.
-              // IMPORTANT: use delay-adjusted time, NOT the scheduled time.
-              // A train 70 min late leaving Focșani at 17:50 departs at 18:60 (19:00),
-              // so Râmnicu Sărat (18:30 scheduled) cannot be marked as passed until 18:30+70=19:40.
-              const timeForPast = dep || arr;
-              const isPassed = isTimePastWithDelay(timeForPast, delay);
+            {/* Absolute Timeline Calculation for Midnight Crossings */}
+            {(() => {
+              const absoluteStops: (number | null)[] = [];
+              let _lastMins = -1;
+              let _dayOffset = 0;
+              for (const stop of stops) {
+                const timeStr = stop.departure_time ?? stop.departureTime ?? stop.arrival_time ?? stop.arrivalTime ?? '';
+                const rawMins = timeToMinutes(timeStr);
+                if (rawMins === null) {
+                  absoluteStops.push(null);
+                  continue;
+                }
+                if (_lastMins !== -1 && rawMins < _lastMins - 240) {
+                  _dayOffset += 1440;
+                }
+                _lastMins = rawMins;
+                const delay = stop.delay ?? stop.delay_minutes ?? 0;
+                absoluteStops.push(rawMins + _dayOffset + delay);
+              }
 
-              // Find the "current" stop = first stop NOT yet passed
-              const prevStop = stops[i - 1];
-              const prevDelay = prevStop ? (prevStop.delay ?? prevStop.delay_minutes ?? 0) : 0;
-              const prevTime = i > 0 ? (prevStop?.departure_time ?? prevStop?.departureTime ?? prevStop?.arrival_time ?? prevStop?.arrivalTime ?? '') : '';
-              const prevPassed = i > 0 && isTimePastWithDelay(prevTime, prevDelay);
-              const isCurrent = !isPassed && prevPassed;
+              const now = new Date();
+              const currentMinsRaw = now.getHours() * 60 + now.getMinutes();
+              let currentAbsoluteTime = currentMinsRaw;
+              const validAbs = absoluteStops.filter((a): a is number => a !== null);
 
-              // Dot color and style
-              const dotColor = isPassed ? '#0066CC' : isCurrent ? '#0066CC' : (dark ? '#4B5563' : '#D1D5DB');
-              const dotSize = isFirst || isLast ? 14 : isCurrent ? 13 : 10;
-              const lineColorAbove = isPassed || isCurrent ? '#0066CC' : (dark ? '#374151' : '#E5E7EB');
-              const lineColorBelow = isPassed && !isLast ? '#0066CC' : (dark ? '#374151' : '#E5E7EB');
+              if (validAbs.length > 0) {
+                const minAbs = validAbs[0];
+                const maxAbs = validAbs[validAbs.length - 1];
+                let bestK = 0;
+                let minDist = Infinity;
+                for (let k = -2; k <= 2; k++) {
+                  const candidate = currentMinsRaw + k * 1440;
+                  let dist = 0;
+                  if (candidate < minAbs) dist = minAbs - candidate;
+                  else if (candidate > maxAbs) dist = candidate - maxAbs;
 
-              return (
-                <View
-                  key={i}
-                  className="flex-row min-h-[52px]"
-                  onLayout={(e) => {
-                    stopYRef.current[i] = e.nativeEvent.layout.y;
-                    if (isCurrent && !hasScrolledRef.current) {
-                      hasScrolledRef.current = true;
-                      setTimeout(() => {
-                        scrollViewRef.current?.scrollTo({
-                          y: Math.max(0, e.nativeEvent.layout.y - 120),
-                          animated: true,
-                        });
-                      }, 350);
-                    }
-                  }}
-                >
-                  {/* Timeline */}
-                  <View className="w-6 items-center">
-                    {!isFirst && <View style={{ flex: 1, width: 2, backgroundColor: lineColorAbove }} />}
-                    <View
-                      style={{
-                        width: dotSize,
-                        height: dotSize,
-                        borderRadius: dotSize / 2,
-                        backgroundColor: isPassed || isCurrent ? dotColor : 'transparent',
-                        borderWidth: isCurrent ? 0 : isPassed ? 0 : 2,
-                        borderColor: dotColor,
-                      }}
-                    />
-                    {!isLast && <View style={{ flex: 1, width: 2, backgroundColor: lineColorBelow }} />}
-                  </View>
-                  {/* Info */}
-                  <View className="flex-1 ml-3 py-2">
-                    <View className="flex-row items-center gap-2">
-                      <Text
-                        className={`text-base font-semibold ${isPassed ? (dark ? 'text-gray-300' : 'text-gray-700') : isCurrent ? (dark ? 'text-white' : 'text-gray-900') : (dark ? 'text-gray-500' : 'text-gray-400')}`}
-                      >
-                        {name}
-                      </Text>
-                      {isCurrent && (
-                        <View className="bg-blue-600 rounded-full px-2 py-0.5">
-                          <Text className="text-white text-[10px] font-bold">{t('common.next')}</Text>
-                        </View>
-                      )}
+                  if (dist < minDist) {
+                    minDist = dist;
+                    bestK = k;
+                  }
+                }
+                currentAbsoluteTime = currentMinsRaw + bestK * 1440;
+              }
+
+              return stops.map((stop, i) => {
+                const name = stop.station_name ?? stop.stationName ?? '-';
+                const arr = stop.arrival_time ?? stop.arrivalTime ?? '';
+                const dep = stop.departure_time ?? stop.departureTime ?? '';
+                const delay = stop.delay ?? stop.delay_minutes ?? 0;
+                const isFirst = i === 0;
+                const isLast = i === stops.length - 1;
+
+                const isPassed = absoluteStops[i] !== null ? (absoluteStops[i]! < currentAbsoluteTime) : false;
+                const prevPassed = i > 0 && absoluteStops[i - 1] !== null ? (absoluteStops[i - 1]! < currentAbsoluteTime) : false;
+                const isCurrent = !isPassed && prevPassed;
+
+                // Dot color and style
+                const dotColor = isPassed ? '#0066CC' : isCurrent ? '#0066CC' : (dark ? '#4B5563' : '#D1D5DB');
+                const dotSize = isFirst || isLast ? 14 : isCurrent ? 13 : 10;
+                const lineColorAbove = isPassed || isCurrent ? '#0066CC' : (dark ? '#374151' : '#E5E7EB');
+                const lineColorBelow = isPassed && !isLast ? '#0066CC' : (dark ? '#374151' : '#E5E7EB');
+
+                return (
+                  <View
+                    key={i}
+                    className="flex-row min-h-[52px]"
+                    onLayout={(e) => {
+                      stopYRef.current[i] = e.nativeEvent.layout.y;
+                      if (isCurrent && !hasScrolledRef.current) {
+                        hasScrolledRef.current = true;
+                        setTimeout(() => {
+                          scrollViewRef.current?.scrollTo({
+                            y: Math.max(0, e.nativeEvent.layout.y - 120),
+                            animated: true,
+                          });
+                        }, 350);
+                      }
+                    }}
+                  >
+                    {/* Timeline */}
+                    <View className="w-6 items-center">
+                      {!isFirst && <View style={{ flex: 1, width: 2, backgroundColor: lineColorAbove }} />}
+                      <View
+                        style={{
+                          width: dotSize,
+                          height: dotSize,
+                          borderRadius: dotSize / 2,
+                          backgroundColor: isPassed || isCurrent ? dotColor : 'transparent',
+                          borderWidth: isCurrent ? 0 : isPassed ? 0 : 2,
+                          borderColor: dotColor,
+                        }}
+                      />
+                      {!isLast && <View style={{ flex: 1, width: 2, backgroundColor: lineColorBelow }} />}
                     </View>
-                    <View className="flex-row gap-3 mt-1 flex-wrap items-center">
-                      {/* Scheduled times */}
-                      {arr ? <Text className={`text-xs ${subText}`}>Arr: {arr}</Text> : null}
-                      {dep ? <Text className={`text-xs ${subText}`}>Dep: {dep}</Text> : null}
-                      {/* Expected (delay-adjusted) times — shown when delay > 0 */}
-                      {delay > 0 && (() => {
-                        const expArr = addMinutesToTime(arr, delay);
-                        const expDep = addMinutesToTime(dep, delay);
-                        const expTime = expDep ?? expArr;
-                        if (!expTime) return null;
-                        return (
-                          <View className="flex-row items-center gap-1">
-                            <Ionicons name="arrow-forward" size={10} color="#D97706" />
-                            <Text className="text-xs font-semibold" style={{ color: '#D97706' }}>
-                              {expTime} {t('trainDetail.estimated2')}
-                            </Text>
+                    {/* Info */}
+                    <View className="flex-1 ml-3 py-2">
+                      <View className="flex-row items-center gap-2">
+                        <Text
+                          className={`text-base font-semibold ${isPassed ? (dark ? 'text-gray-300' : 'text-gray-700') : isCurrent ? (dark ? 'text-white' : 'text-gray-900') : (dark ? 'text-gray-500' : 'text-gray-400')}`}
+                        >
+                          {name}
+                        </Text>
+                        {isCurrent && (
+                          <View className="bg-blue-600 rounded-full px-2 py-0.5">
+                            <Text className="text-white text-[10px] font-bold">{t('common.next')}</Text>
                           </View>
-                        );
-                      })()}
-                      {/* Delay badge */}
-                      {(isPassed || delay > 0) && (
-                        <Text className="text-xs font-bold" style={{ color: delayColor(delay) }}>
-                          {delay !== 0 ? formatDelay(delay, t) : hasLive ? t('common.onTime') : ''}
-                        </Text>
-                      )}
-                      {/* For upcoming on-time stops: show scheduled label */}
-                      {!isPassed && !isCurrent && delay === 0 && (dep || arr) && (
-                        <Text className={`text-xs italic ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
-                          {t('trainDetail.programmed')}
-                        </Text>
-                      )}
-                    </View>
-                    <View className={`text-xs mt-0.5 flex-row items-center gap-3 flex-wrap`}>
-                      {/* Platform badge */}
-                      {stop.platform && (
-                        <View className={`flex-row items-center rounded-md px-2 py-0.5 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                          <Ionicons name="train-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
-                          <Text className={`text-xs ml-1 font-medium ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
-                            {t('trainDetail.platformLabel', { platform: stop.platform })}
+                        )}
+                      </View>
+                      <View className="flex-row gap-3 mt-1 flex-wrap items-center">
+                        {/* Scheduled times */}
+                        {arr ? <Text className={`text-xs ${subText}`}>Arr: {arr}</Text> : null}
+                        {dep ? <Text className={`text-xs ${subText}`}>Dep: {dep}</Text> : null}
+                        {/* Expected (delay-adjusted) times — shown when delay > 0 */}
+                        {delay > 0 && (() => {
+                          const expArr = addMinutesToTime(arr, delay);
+                          const expDep = addMinutesToTime(dep, delay);
+                          const expTime = expDep ?? expArr;
+                          if (!expTime) return null;
+                          return (
+                            <View className="flex-row items-center gap-1">
+                              <Ionicons name="arrow-forward" size={10} color="#D97706" />
+                              <Text className="text-xs font-semibold" style={{ color: '#D97706' }}>
+                                {expTime} {t('trainDetail.estimated2')}
+                              </Text>
+                            </View>
+                          );
+                        })()}
+                        {/* Delay badge */}
+                        {(isPassed || delay > 0) && (
+                          <Text className="text-xs font-bold" style={{ color: delayColor(delay) }}>
+                            {delay !== 0 ? formatDelay(delay, t) : hasLive ? t('common.onTime') : ''}
                           </Text>
-                        </View>
-                      )}
-                      {/* Dwell time badge — only if > 0 */}
-                      {(() => {
-                        const dwell = stop.dwell_minutes ?? calcDwell(arr, dep);
-                        if (dwell <= 0) return null;
-                        return (
+                        )}
+                        {/* For upcoming on-time stops: show scheduled label */}
+                        {!isPassed && !isCurrent && delay === 0 && (dep || arr) && (
+                          <Text className={`text-xs italic ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
+                            {t('trainDetail.programmed')}
+                          </Text>
+                        )}
+                      </View>
+                      <View className={`text-xs mt-0.5 flex-row items-center gap-3 flex-wrap`}>
+                        {/* Platform badge */}
+                        {stop.platform && (
                           <View className={`flex-row items-center rounded-md px-2 py-0.5 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
-                            <Ionicons name="time-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
+                            <Ionicons name="train-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
                             <Text className={`text-xs ml-1 font-medium ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
-                              {t('trainDetail.dwellLabel', { dwell })}
+                              {t('trainDetail.platformLabel', { platform: stop.platform })}
                             </Text>
                           </View>
-                        );
-                      })()}
-                    </View>
-                    {stop.observations && <Text className="text-xs text-yellow-600 mt-0.5 italic">{stop.observations}</Text>}
+                        )}
+                        {/* Dwell time badge — only if > 0 */}
+                        {(() => {
+                          const dwell = stop.dwell_minutes ?? calcDwell(arr, dep);
+                          if (dwell <= 0) return null;
+                          return (
+                            <View className={`flex-row items-center rounded-md px-2 py-0.5 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                              <Ionicons name="time-outline" size={11} color={dark ? '#9CA3AF' : '#6B7280'} />
+                              <Text className={`text-xs ml-1 font-medium ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
+                                {t('trainDetail.dwellLabel', { dwell })}
+                              </Text>
+                            </View>
+                          );
+                        })()}
+                      </View>
+                      {stop.observations && <Text className="text-xs text-yellow-600 mt-0.5 italic">{stop.observations}</Text>}
 
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              });
+            })()}
             {stops.length === 0 && (
               <Text className={`text-center py-4 ${subText}`}>{t('trainDetail.noStops')}</Text>
             )}

@@ -4,7 +4,7 @@ import {
   ScrollView, ActivityIndicator, Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { searchTrains } from '../../src/api';
+import { searchTrains, searchStations } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -17,9 +17,11 @@ function categoryColor(trainNumber: string) {
   return CATEGORY_COLORS[p] ?? '#4B5563';
 }
 
-interface TrainResult {
-  train_number: string;
-  route?: string;
+interface UnifiedResult {
+  type: 'train' | 'station';
+  id: string; // train_number or station_id
+  title: string;
+  subtitle?: string;
   category?: string;
   departure_time?: string;
   arrival_time?: string;
@@ -31,8 +33,8 @@ export default function SearchScreen() {
   const { t } = useTranslation();
 
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<TrainResult[]>([]);
-  const [suggestions, setSuggestions] = useState<TrainResult[]>([]);
+  const [results, setResults] = useState<UnifiedResult[]>([]);
+  const [suggestions, setSuggestions] = useState<UnifiedResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
@@ -44,8 +46,29 @@ export default function SearchScreen() {
       const q = query.trim();
       if (q.length >= 2) {
         try {
-          const data = await searchTrains(q);
-          setSuggestions(data.results?.slice(0, 5) ?? []);
+          const [trainData, stationData] = await Promise.all([
+            searchTrains(q).catch(() => ({ results: [] })),
+            searchStations(q).catch(() => [])
+          ]);
+
+          const unified: UnifiedResult[] = [
+            ...(trainData.results?.slice(0, 3) || []).map((tr: any) => ({
+              type: 'train' as const,
+              id: tr.train_number,
+              title: tr.train_number,
+              subtitle: tr.route,
+              category: tr.category,
+              departure_time: tr.departure_time,
+              arrival_time: tr.arrival_time,
+            })),
+            ...(stationData?.slice(0, 3) || []).map((st: any) => ({
+              type: 'station' as const,
+              id: String(st.station_id),
+              title: st.name,
+              subtitle: st.region,
+            }))
+          ];
+          setSuggestions(unified);
           setShowSuggestions(true);
         } catch {
           setSuggestions([]);
@@ -68,8 +91,29 @@ export default function SearchScreen() {
     setSearched(true);
     Keyboard.dismiss();
     try {
-      const data = await searchTrains(q);
-      setResults(data.results ?? []);
+      const [trainData, stationData] = await Promise.all([
+        searchTrains(q).catch(() => ({ results: [] })),
+        searchStations(q).catch(() => [])
+      ]);
+
+      const unified: UnifiedResult[] = [
+        ...(trainData.results || []).map((tr: any) => ({
+          type: 'train' as const,
+          id: tr.train_number,
+          title: tr.train_number,
+          subtitle: tr.route,
+          category: tr.category,
+          departure_time: tr.departure_time,
+          arrival_time: tr.arrival_time,
+        })),
+        ...(stationData || []).map((st: any) => ({
+          type: 'station' as const,
+          id: String(st.station_id),
+          title: st.name,
+          subtitle: st.region,
+        }))
+      ];
+      setResults(unified);
     } catch (e: any) {
       setError(e?.response?.data?.error ?? t('search.searchError'));
       setResults([]);
@@ -78,10 +122,14 @@ export default function SearchScreen() {
     }
   };
 
-  const handleSuggestionTap = (trainNumber: string) => {
+  const handleSuggestionTap = (item: UnifiedResult) => {
     setShowSuggestions(false);
     Keyboard.dismiss();
-    router.push(`/train/${encodeURIComponent(trainNumber)}`);
+    if (item.type === 'train') {
+      router.push(`/train/${encodeURIComponent(item.id)}`);
+    } else {
+      router.push({ pathname: '/station/[id]', params: { id: item.id, name: item.title } });
+    }
   };
 
   // Theme
@@ -127,21 +175,25 @@ export default function SearchScreen() {
             <View className={`px-4 py-2 border-b ${divider}`}>
               <Text className={`text-xs uppercase ${subText}`}>{t('search.suggestions')}</Text>
             </View>
-            {suggestions.map((train, i) => (
+            {suggestions.map((item, i) => (
               <TouchableOpacity
-                key={`${train.train_number}-${i}`}
+                key={`${item.id}-${i}`}
                 className={`px-4 py-3 flex-row items-center border-b ${divider}`}
-                onPress={() => handleSuggestionTap(train.train_number)}
+                onPress={() => handleSuggestionTap(item)}
                 activeOpacity={0.6}
               >
-                <View
-                  className="w-2 h-2 rounded-full mr-3"
-                  style={{ backgroundColor: categoryColor(train.train_number) }}
-                />
+                {item.type === 'train' ? (
+                  <View
+                    className="w-2 h-2 rounded-full mr-3"
+                    style={{ backgroundColor: categoryColor(item.id) }}
+                  />
+                ) : (
+                  <Ionicons name="location-outline" size={14} color="#0066CC" style={{ marginRight: 12, marginLeft: -2 }} />
+                )}
                 <View className="flex-1">
-                  <Text className={`text-sm font-bold ${headText}`}>{train.train_number}</Text>
-                  {train.route ? (
-                    <Text className={`text-xs mt-0.5 ${subText}`}>{train.route}</Text>
+                  <Text className={`text-sm font-bold ${headText}`}>{item.title}</Text>
+                  {item.subtitle ? (
+                    <Text className={`text-xs mt-0.5 ${subText}`}>{item.subtitle}</Text>
                   ) : null}
                 </View>
                 <Ionicons name="arrow-forward" size={14} color={dark ? '#4B5563' : '#D1D5DB'} />
@@ -166,31 +218,42 @@ export default function SearchScreen() {
         ) : null}
 
         {/* Results */}
-        {!loading && results.map((train, i) => (
+        {!loading && results.map((item, i) => (
           <TouchableOpacity
-            key={`${train.train_number}-${i}`}
+            key={`${item.id}-${i}`}
             className={`border-b px-4 py-4 flex-row items-center ${dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}
-            onPress={() => router.push(`/train/${encodeURIComponent(train.train_number)}`)}
+            onPress={() => item.type === 'train' ? router.push(`/train/${encodeURIComponent(item.id)}`) : router.push({ pathname: '/station/[id]', params: { id: item.id, name: item.title } })}
             activeOpacity={0.6}
           >
-            <View
-              className="rounded-lg px-2.5 py-1 mr-3"
-              style={{ backgroundColor: categoryColor(train.train_number) }}
-            >
-              <Text className="text-white font-bold text-xs">{train.train_number}</Text>
-            </View>
-            <View className="flex-1">
-              {train.route ? (
-                <Text className={`text-sm font-semibold ${headText}`}>{train.route}</Text>
-              ) : null}
-              <View className="flex-row gap-4 mt-1">
-                {train.departure_time ? (
-                  <Text className={`text-xs ${subText}`}>{t('search.departure')}: {train.departure_time}</Text>
-                ) : null}
-                {train.arrival_time ? (
-                  <Text className={`text-xs ${subText}`}>{t('search.arrival')}: {train.arrival_time}</Text>
-                ) : null}
+            {item.type === 'train' ? (
+              <View
+                className="rounded-lg px-2.5 py-1 mr-3"
+                style={{ backgroundColor: categoryColor(item.id) }}
+              >
+                <Text className="text-white font-bold text-xs">{item.id}</Text>
               </View>
+            ) : (
+              <View className="bg-blue-50 dark:bg-blue-900/30 rounded-lg px-2.5 py-1 mr-3">
+                <Ionicons name="location" size={16} color="#0066CC" />
+              </View>
+            )}
+            <View className="flex-1">
+              <Text className={`text-sm font-bold flex-1 ${headText}`}>
+                {item.type === 'train' && item.subtitle ? `${item.subtitle}` : item.title}
+              </Text>
+
+              {item.type === 'train' ? (
+                <View className="flex-row gap-4 mt-1">
+                  {item.departure_time ? (
+                    <Text className={`text-xs ${subText}`}>{t('search.departure')}: {item.departure_time}</Text>
+                  ) : null}
+                  {item.arrival_time ? (
+                    <Text className={`text-xs ${subText}`}>{t('search.arrival')}: {item.arrival_time}</Text>
+                  ) : null}
+                </View>
+              ) : item.subtitle ? (
+                <Text className={`text-xs mt-0.5 ${subText}`}>{item.subtitle}</Text>
+              ) : null}
             </View>
             <Ionicons name="chevron-forward" size={20} color={dark ? '#4B5563' : '#D1D5DB'} />
           </TouchableOpacity>

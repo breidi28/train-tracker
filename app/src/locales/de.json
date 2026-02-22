@@ -105,13 +105,13 @@
         "unknown": "UNBEKANNT"
     },
     "search": {
-        "title": "Zug suchen",
-        "placeholder": "Zugnummer oder Strecke…",
+        "title": "Suche",
+        "placeholder": "Zugnummer, Strecke oder Bahnhof…",
         "recentSearches": "LETZTE SUCHEN",
         "results": "ERGEBNISSE",
-        "noResults": "Keine Züge gefunden.",
+        "noResults": "Keine Ergebnisse gefunden.",
         "searching": "Wird gesucht…",
-        "header": "ZÜGE SUCHEN",
+        "header": "SUCHE",
         "inputPlaceholder": "z.B.: IR, IC 536, Brașov…",
         "suggestions": "Vorschläge",
         "searchError": "Suchfehler",

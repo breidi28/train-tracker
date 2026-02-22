@@ -53,6 +53,11 @@ export async function fetchStations() {
   return Array.isArray(data) ? data : [];
 }
 
+export async function searchStations(query: string) {
+  const { data } = await api.get(`/api/stations/search/${encodeURIComponent(query)}`);
+  return Array.isArray(data) ? data : [];
+}
+
 export async function fetchStationTimetable(stationId: number) {
   const { data } = await api.get(`/station/${stationId}`);
   return data;

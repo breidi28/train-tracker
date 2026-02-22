@@ -105,13 +105,13 @@
         "unknown": "INCONNU"
     },
     "search": {
-        "title": "Rechercher un train",
-        "placeholder": "Numéro de train ou itinéraire…",
+        "title": "Rechercher",
+        "placeholder": "Numéro de train, itinéraire ou gare…",
         "recentSearches": "RECHERCHES RÉCENTES",
         "results": "RÉSULTATS",
-        "noResults": "Aucun train trouvé.",
+        "noResults": "Aucun résultat trouvé.",
         "searching": "Recherche…",
-        "header": "RECHERCHER DES TRAINS",
+        "header": "RECHERCHER",
         "inputPlaceholder": "Ex : IR, IC 536, Brașov…",
         "suggestions": "Suggestions",
         "searchError": "Erreur de recherche",

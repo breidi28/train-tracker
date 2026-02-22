@@ -105,13 +105,13 @@
         "unknown": "ISMERETLEN"
     },
     "search": {
-        "title": "Vonat keresése",
-        "placeholder": "Vonatszám vagy útvonal…",
+        "title": "Keresés",
+        "placeholder": "Vonatszám, útvonal vagy állomás…",
         "recentSearches": "LEGUTÓBBI KERESÉSEK",
         "results": "EREDMÉNYEK",
-        "noResults": "Nem találtunk vonatot.",
+        "noResults": "Nem találtunk eredményt.",
         "searching": "Keresés…",
-        "header": "VONATOK KERESÉSE",
+        "header": "KERESÉS",
         "inputPlaceholder": "Pl.: IR, IC 536, Brassó…",
         "suggestions": "Javaslatok",
         "searchError": "Keresési hiba",

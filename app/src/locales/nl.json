@@ -105,13 +105,13 @@
         "unknown": "ONBEKEND"
     },
     "search": {
-        "title": "Trein zoeken",
-        "placeholder": "Treinnummer of route…",
+        "title": "Zoeken",
+        "placeholder": "Treinnummer, route of station…",
         "recentSearches": "RECENTE ZOEKOPDRACHTEN",
         "results": "RESULTATEN",
-        "noResults": "Geen treinen gevonden.",
+        "noResults": "Geen resultaten gevonden.",
         "searching": "Zoeken…",
-        "header": "TREINEN ZOEKEN",
+        "header": "ZOEKEN",
         "inputPlaceholder": "Bijv: IR, IC 536, Brașov…",
         "suggestions": "Suggesties",
         "searchError": "Zoekfout",

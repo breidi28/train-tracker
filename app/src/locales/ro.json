@@ -102,16 +102,17 @@
         "retroDelay": "ÎNT.",
         "retroPlatform": "LINIA",
         "onTimShort": "LA TMP",
-        "unknown": "NECUNOSCUT"
+        "unknown": "NECUNOSCUT",
+        "searchPlaceholder": "Caută o stație..."
     },
     "search": {
-        "title": "Caută Tren",
-        "placeholder": "Număr tren sau rută…",
+        "title": "Căutare",
+        "placeholder": "Număr tren, rută sau stație…",
         "recentSearches": "CĂUTĂRI RECENTE",
         "results": "REZULTATE",
-        "noResults": "Niciun tren găsit.",
+        "noResults": "Niciun rezultat găsit.",
         "searching": "Se caută…",
-        "header": "CAUTĂ TRENURI",
+        "header": "CĂUTARE",
         "inputPlaceholder": "Ex: IR, IC 536, Brașov…",
         "suggestions": "Sugestii",
         "searchError": "Eroare la căutare",
