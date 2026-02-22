@@ -675,6 +675,7 @@ export default function TrainDetailScreen() {
               </Text>
               <TouchableOpacity
                 onPress={() => setShowAllPoints(!showAllPoints)}
+                activeOpacity={1}
                 className={`flex-row items-center rounded-full px-3 py-1 ${showAllPoints ? 'bg-primary' : (dark ? 'bg-gray-800' : 'bg-gray-100')}`}
               >
                 <Ionicons

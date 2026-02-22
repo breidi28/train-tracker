@@ -58,6 +58,7 @@
         "reportDetails": "Részletek (opcionális)",
         "reportPlaceholder": "Pl.: Nincs hely a 3. kocsiban…",
         "reportSend": "JELENTÉS KÜLDÉSE",
+        "showAllPoints": "Minden pont megjelenítése",
         "reportSent": "Jelentés elküldve",
         "reportSentMsg": "Köszönjük! Az Ön jelentése segít a többi utasnak.",
         "reportError": "Nem sikerült elküldeni a jelentést.",

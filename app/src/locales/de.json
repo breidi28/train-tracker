@@ -58,6 +58,7 @@
         "reportDetails": "Details (optional)",
         "reportPlaceholder": "z.B.: Keine Plätze in Wagen 3...",
         "reportSend": "BERICHT SENDEN",
+        "showAllPoints": "Alle Punkte anzeigen",
         "reportSent": "Bericht gesendet",
         "reportSentMsg": "Danke! Ihr Bericht hilft anderen Fahrgästen.",
         "reportError": "Bericht konnte nicht gesendet werden.",

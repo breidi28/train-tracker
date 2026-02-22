@@ -58,6 +58,7 @@
         "reportDetails": "Details (optioneel)",
         "reportPlaceholder": "Bijv: Geen zitplaatsen in rijtuig 3...",
         "reportSend": "RAPPORT VERSTUREN",
+        "showAllPoints": "Toon alle punten",
         "reportSent": "Rapport verstuurd",
         "reportSentMsg": "Bedankt! Uw rapport helpt andere passagiers.",
         "reportError": "Kon het rapport niet versturen.",

@@ -58,6 +58,7 @@
         "reportDetails": "Détails (optionnel)",
         "reportPlaceholder": "Ex : Pas de places dans le wagon 3...",
         "reportSend": "ENVOYER LE RAPPORT",
+        "showAllPoints": "Afficher tous les points",
         "reportSent": "Rapport envoyé",
         "reportSentMsg": "Merci ! Votre rapport aide les autres passagers.",
         "reportError": "Impossible d'envoyer le rapport.",
