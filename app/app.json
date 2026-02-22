@@ -51,7 +51,8 @@
           "color": "#0066CC",
           "sounds": []
         }
-      ]
+      ],
+      "expo-background-task"
     ],
     "extra": {
       "router": {},

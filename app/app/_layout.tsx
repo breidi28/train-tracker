@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { I18nextProvider } from 'react-i18next';
-import { setupNotificationChannel, pollWatchedTrains } from '../src/notifications';
+import { setupNotificationChannel, pollWatchedTrains, registerBackgroundFetchAsync } from '../src/notifications';
 import { ThemeProvider, useTheme } from '../src/ThemeContext';
 import i18n, { initI18n } from '../src/i18n';
 
@@ -16,6 +16,10 @@ function AppShell() {
   useEffect(() => {
     setupNotificationChannel();
     pollWatchedTrains();
+    // Catch BackgroundFetch info.plist error in Expo Go
+    registerBackgroundFetchAsync().catch((err) => {
+      console.warn("Background fetch registration failed (expected in Expo Go iOS):", err.message);
+    });
   }, []);
 
   useEffect(() => {

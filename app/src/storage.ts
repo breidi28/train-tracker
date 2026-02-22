@@ -13,6 +13,7 @@ const HISTORY_KEY = 'delayHistory';
 const FAV_TRAINS_KEY = 'favTrains';
 const FAV_STATIONS_KEY = 'favStations';
 const MAP_ROUTE_KEY = 'mapRouteCache'; // Record<fingerprint, [lat,lon][]>
+const TRAIN_CACHE_KEY = 'trainCache';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -194,3 +195,34 @@ export async function saveMapRouteCache(fingerprint: string, path: number[][]): 
         await AsyncStorage.setItem(MAP_ROUTE_KEY, JSON.stringify(all));
     } catch { }
 }
+
+// ─── Offline Train schedule cache ────────────────────────────────────────────
+
+export async function saveTrainCache(trainId: string, data: any): Promise<void> {
+    try {
+        const raw = await AsyncStorage.getItem(TRAIN_CACHE_KEY);
+        const all = raw ? JSON.parse(raw) : {};
+        all[trainId] = {
+            data,
+            timestamp: new Date().toISOString()
+        };
+        // Keep at most 20 trains
+        const keys = Object.keys(all);
+        if (keys.length > 20) {
+            delete all[keys[0]];
+        }
+        await AsyncStorage.setItem(TRAIN_CACHE_KEY, JSON.stringify(all));
+    } catch { }
+}
+
+export async function getTrainCache(trainId: string): Promise<any | null> {
+    try {
+        const raw = await AsyncStorage.getItem(TRAIN_CACHE_KEY);
+        if (!raw) return null;
+        const all = JSON.parse(raw);
+        return all[trainId]?.data ?? null;
+    } catch {
+        return null;
+    }
+}
+

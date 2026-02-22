@@ -7,9 +7,24 @@
  */
 
 import * as Notifications from 'expo-notifications';
+import * as BackgroundTask from 'expo-background-task';
+import * as TaskManager from 'expo-task-manager';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchTrain } from './api';
 import { recordDelaySnapshot } from './storage';
+
+const BACKGROUND_FETCH_TASK = 'background-fetch-train-delays';
+
+// Define the background task globally
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+    try {
+        await pollWatchedTrains();
+        // Return BackgroundTaskResult if data changed, but NoData is fine for simplicity here
+        return BackgroundTask.BackgroundTaskResult.Success;
+    } catch (e) {
+        return BackgroundTask.BackgroundTaskResult.Failed;
+    }
+});
 
 // ─── Storage keys ────────────────────────────────────────────────────────────
 const WATCHED_KEY = 'watchedTrains'; // JSON array of WatchedTrain objects
@@ -58,6 +73,14 @@ export async function setupNotificationChannel() {
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
         description: 'Notificări despre întârzierile trenurilor urmărite',
+    });
+}
+
+// ─── Background Fetch Registration ──────────────────────────────────────────
+
+export async function registerBackgroundFetchAsync() {
+    return BackgroundTask.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+        minimumInterval: 15 * 60, // 15 minutes
     });
 }
 

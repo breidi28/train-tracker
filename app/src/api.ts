@@ -41,6 +41,11 @@ export async function searchTrains(query: string, date?: string) {
   return data;
 }
 
+export async function fetchTrainComposition(trainId: string) {
+  const { data } = await api.get(`/api/train/${encodeURIComponent(trainId)}/composition`);
+  return data;
+}
+
 // ── Station endpoints ──
 
 export async function fetchStations() {

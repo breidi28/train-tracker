@@ -8,7 +8,7 @@ import * as Location from 'expo-location';
 
 import { buildLeafletHtml } from '../../src/leafletMap';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { fetchTrain, fetchTrainReports, submitTrainReport } from '../../src/api';
+import { fetchTrain, fetchTrainReports, fetchTrainComposition, submitTrainReport } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import {
   recordRecentSearch, getDelayHistory, type DelaySnapshot,
   getFavoriteTrains, toggleFavoriteTrain,
   getMapRouteCache, saveMapRouteCache,
+  saveTrainCache, getTrainCache,
 } from '../../src/storage';
 import { useTheme } from '../../src/ThemeContext';
 
@@ -218,19 +219,39 @@ export default function TrainDetailScreen() {
   const [reportLoading, setReportLoading] = useState(false);
   const [showReports, setShowReports] = useState(false);
 
+  // Composition / Facilities
+  const [composition, setComposition] = useState<any>(null);
+  const [showFacilities, setShowFacilities] = useState(false);
+
   const load = async () => {
     hasScrolledRef.current = false; // reset so new data triggers auto-scroll
     stopYRef.current = {};
     try {
-      const [data, reps] = await Promise.all([
+      const [data, reps, comp] = await Promise.all([
         fetchTrain(id ?? ''),
-        fetchTrainReports(id ?? '').catch(() => [])
+        fetchTrainReports(id ?? '').catch(() => []),
+        fetchTrainComposition(id ?? '').catch(() => null)
       ]);
       setTrain(data);
       setReports(reps);
+      setComposition(comp);
       setSelectedBranch(0);
       setError('');
+      if (id) saveTrainCache(id, data).catch(() => { });
     } catch (e: any) {
+      if (id) {
+        const cached = await getTrainCache(id);
+        if (cached) {
+          setTrain({ ...cached, isOffline: true });
+          setReports([]);
+          setComposition(null);
+          setSelectedBranch(0);
+          setError(t('common.offlineFallback', { defaultValue: 'Se afișează date salvate (fără conexiune la internet).' }));
+          setLoading(false);
+          setRefreshing(false);
+          return;
+        }
+      }
       const msg = e?.response?.data?.error ?? e.message ?? t('common.error');
       setError(msg);
       if (e?.response?.data?.suggestions) setTrain({ suggestions: e.response.data.suggestions });
@@ -564,6 +585,61 @@ export default function TrainDetailScreen() {
             )}
           </View>
 
+          {/* ── Facilities (collapsible) ─────────────────────────────── */}
+          {composition && (
+            <View className={`mt-3 mx-4 border rounded-2xl ${card}`}>
+              <TouchableOpacity
+                onPress={() => setShowFacilities(v => !v)}
+                activeOpacity={0.7}
+                className="flex-row items-center justify-between px-4 py-4"
+              >
+                <View className="flex-row items-center">
+                  <Ionicons name="train" size={16} color="#0066CC" />
+                  <Text className={`text-xs font-bold tracking-widest ml-2 px-1 ${subText}`}>
+                    {t('trainDetail.facilities', { defaultValue: 'FACILITĂȚI & GARNITURĂ' })}
+                  </Text>
+                </View>
+                <Ionicons
+                  name={showFacilities ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={dark ? '#6B7280' : '#9CA3AF'}
+                />
+              </TouchableOpacity>
+
+              {showFacilities && (
+                <View className={`px-4 pb-4 border-t pt-2 ${divider}`}>
+                  {composition.services?.length > 0 && (
+                    <View className="flex-row flex-wrap gap-2 mb-2">
+                      {composition.services.map((service: string, i: number) => (
+                        <View key={i} className={`flex-row items-center rounded-lg px-2 py-1 ${dark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                          <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
+                          <Text className={`text-xs font-semibold ml-1 ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{service}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  {composition.locomotive && (
+                    <View className={`mt-2 py-3 border-b ${divider}`}>
+                      <Text className={`text-xs font-bold mb-1 ${subText}`}>Locomotivă: {composition.locomotive.class}</Text>
+                      <Text className={`text-sm ${headText}`}>{composition.locomotive.description} - {composition.locomotive.power}</Text>
+                      <Text className={`text-xs mt-1 ${subText}`}>Viteză maximă: {composition.locomotive.max_speed}</Text>
+                    </View>
+                  )}
+                  {composition.cars?.map((car: any, i: number) => (
+                    <View key={i} className={`py-3 ${i < composition.cars.length - 1 ? `border-b ${divider}` : ''}`}>
+                      <View className="flex-row items-center mb-1">
+                        <View className="bg-blue-100 dark:bg-blue-900 rounded px-2 py-0.5 mr-2">
+                          <Text className={`text-xs font-bold uppercase ${dark ? 'text-blue-200' : 'text-blue-800'}`}>Vagon {car.position}</Text>
+                        </View>
+                        <Text className={`text-xs font-bold ${subText}`}>{car.class} - {car.capacity}</Text>
+                      </View>
+                      <Text className={`text-sm ${headText}`}>{car.description}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
 
           {/* ── Stops ─────────────────────────────────────────────────── */}
           <View className={`mt-3 mx-4 border rounded-2xl px-4 py-4 ${card}`}>
