@@ -76,7 +76,9 @@
         "facilities": "FELSZERELTSÉG ÉS ÖSSZEÁLLÍTÁS",
         "locomotive": "Mozdony: {{class}}",
         "maxSpeed": "Max sebesség: {{speed}}",
-        "car": "Kocsi {{position}}"
+        "car": "Kocsi {{position}}",
+        "systemAlerts": "CFR FIGYELMEZTETÉSEK",
+        "viewAlerts": "Részletek megtekintése"
     },
     "station": {
         "departures": "INDULÁSOK",

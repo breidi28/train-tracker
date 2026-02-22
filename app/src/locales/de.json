@@ -76,7 +76,9 @@
         "facilities": "AUSSTATTUNG & ZUGZUSAMMENSTELLUNG",
         "locomotive": "Lokomotive: {{class}}",
         "maxSpeed": "Höchstgeschwindigkeit: {{speed}}",
-        "car": "Wagen {{position}}"
+        "car": "Wagen {{position}}",
+        "systemAlerts": "CFR WARNUNGEN",
+        "viewAlerts": "Warndetails anzeigen"
     },
     "station": {
         "departures": "ABFAHRTEN",

@@ -58,6 +58,7 @@
         "reportDetails": "Detalii (opțional)",
         "reportPlaceholder": "Ex: Nu sunt locuri în vagonul 3...",
         "reportSend": "TRIMITE RAPORT",
+        "showAllPoints": "Arată toate punctele",
         "reportSent": "Raport trimis",
         "reportSentMsg": "Mulțumim pentru contribuție! Raportul tău ajută alți călători.",
         "reportError": "Nu am putut trimite raportul.",
@@ -78,7 +79,7 @@
         "maxSpeed": "Viteză maximă: {{speed}}",
         "car": "Vagon {{position}}",
         "systemAlerts": "AVERTIZĂRI CFR",
-        "viewAlerts": "Vezi detalii transbordare"
+        "viewAlerts": "Vezi detalii alertă"
     },
     "station": {
         "departures": "PLECĂRI",

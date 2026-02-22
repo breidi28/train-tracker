@@ -76,7 +76,9 @@
         "facilities": "ÉQUIPEMENTS ET COMPOSITION",
         "locomotive": "Locomotive : {{class}}",
         "maxSpeed": "Vitesse max : {{speed}}",
-        "car": "Voiture {{position}}"
+        "car": "Voiture {{position}}",
+        "systemAlerts": "ALERTES SYSTÈME",
+        "viewAlerts": "Voir les détails de l'alerte"
     },
     "station": {
         "departures": "DÉPARTS",

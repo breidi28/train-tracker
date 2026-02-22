@@ -76,7 +76,9 @@
         "facilities": "SERVIZI E COMPOSIZIONE",
         "locomotive": "Locomotiva: {{class}}",
         "maxSpeed": "Velocità massima: {{speed}}",
-        "car": "Carrozza {{position}}"
+        "car": "Carrozza {{position}}",
+        "systemAlerts": "AVVISI DI SISTEMA",
+        "viewAlerts": "Vedi dettagli avviso"
     },
     "station": {
         "departures": "PARTENZE",

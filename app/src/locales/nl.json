@@ -76,7 +76,9 @@
         "facilities": "FACILITEITEN & SAMENSTELLING",
         "locomotive": "Locomotief: {{class}}",
         "maxSpeed": "Max snelheid: {{speed}}",
-        "car": "Rijtuig {{position}}"
+        "car": "Rijtuig {{position}}",
+        "systemAlerts": "SYSTEEMMELDINGEN",
+        "viewAlerts": "Bekijk meldingsdetails"
     },
     "station": {
         "departures": "VERTREKKEN",

@@ -58,6 +58,7 @@
         "reportDetails": "Details (optional)",
         "reportPlaceholder": "Ex: No seats in car 3...",
         "reportSend": "SEND REPORT",
+        "showAllPoints": "Show all points",
         "reportSent": "Report sent",
         "reportSentMsg": "Thank you! Your report helps other passengers.",
         "reportError": "Could not send the report.",

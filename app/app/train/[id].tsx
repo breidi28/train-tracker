@@ -235,6 +235,9 @@ export default function TrainDetailScreen() {
   // Alerts modal
   const [showAlertsModal, setShowAlertsModal] = useState(false);
 
+  // Show all points toggle
+  const [showAllPoints, setShowAllPoints] = useState(false);
+
   const load = async () => {
     hasScrolledRef.current = false; // reset so new data triggers auto-scroll
     stopYRef.current = {};
@@ -305,9 +308,15 @@ export default function TrainDetailScreen() {
   useEffect(() => {
     if (!train) return;
     const bs: { label: string; stations_data: Stop[] }[] = train?.branches ?? [];
-    const ss: Stop[] = bs.length > 0
+    let ss: Stop[] = bs.length > 0
       ? (bs[selectedBranch]?.stations_data ?? [])
       : (train?.stops ?? train?.stations ?? []);
+
+    // Filter for map if requested
+    if (!showAllPoints) {
+      ss = ss.filter((s: any) => s.is_stop !== false);
+    }
+
     const names = ss.map((s) => ({ name: s.station_name ?? s.stationName ?? '' })).filter(s => s.name);
     if (!names.length) return;
     const fingerprint = names.map(n => n.name).join('~');
@@ -315,7 +324,7 @@ export default function TrainDetailScreen() {
     getMapRouteCache(fingerprint).then(cached => {
       setMapHtml(buildLeafletHtml(names, cached));
     });
-  }, [train, selectedBranch]);
+  }, [train, selectedBranch, showAllPoints]);
 
   // GPS for map
   useEffect(() => {
@@ -403,9 +412,12 @@ export default function TrainDetailScreen() {
   };
 
   const branches: { label: string; stations_data: Stop[] }[] = train?.branches ?? [];
-  const stops: Stop[] = branches.length > 0
+  const allStops: Stop[] = branches.length > 0
     ? (branches[selectedBranch]?.stations_data ?? [])
     : (train?.stops ?? train?.stations ?? train?.route?.stations ?? []);
+
+  const stops = showAllPoints ? allStops : allStops.filter((s: any) => s.is_stop !== false);
+
   const trainNumber = train?.train_number ?? train?.trainNumber ?? id ?? '';
   const route = train?.route_name ?? train?.route ?? '';
   const operator = train?.operator ?? 'CFR Călători';
@@ -657,9 +669,24 @@ export default function TrainDetailScreen() {
 
           {/* ── Stops ─────────────────────────────────────────────────── */}
           <View className={`mt-3 mx-4 border rounded-2xl px-4 py-4 ${card}`}>
-            <Text className={`text-xs font-bold tracking-widest mb-4 ${subText}`}>
-              {t('trainDetail.stops')} ({stops.length})
-            </Text>
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className={`text-xs font-bold tracking-widest ${subText}`}>
+                {t('trainDetail.stops')} ({stops.length})
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowAllPoints(!showAllPoints)}
+                className={`flex-row items-center rounded-full px-3 py-1 ${showAllPoints ? 'bg-primary' : (dark ? 'bg-gray-800' : 'bg-gray-100')}`}
+              >
+                <Ionicons
+                  name={showAllPoints ? "eye" : "eye-off"}
+                  size={12}
+                  color={showAllPoints ? "#fff" : (dark ? "#9CA3AF" : "#6B7280")}
+                />
+                <Text className={`text-[10px] font-bold ml-1 ${showAllPoints ? 'text-white' : subText}`}>
+                  {t('trainDetail.showAllPoints')}
+                </Text>
+              </TouchableOpacity>
+            </View>
             {stops.map((stop, i) => {
               const name = stop.station_name ?? stop.stationName ?? '-';
               const arr = stop.arrival_time ?? stop.arrivalTime ?? '';
