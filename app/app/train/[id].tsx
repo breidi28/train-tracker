@@ -628,8 +628,8 @@ export default function TrainDetailScreen() {
                   {composition.cars?.map((car: any, i: number) => (
                     <View key={i} className={`py-3 ${i < composition.cars.length - 1 ? `border-b ${divider}` : ''}`}>
                       <View className="flex-row items-center mb-1">
-                        <View className="bg-blue-100 dark:bg-blue-900 rounded px-2 py-0.5 mr-2">
-                          <Text className={`text-xs font-bold uppercase ${dark ? 'text-blue-200' : 'text-blue-800'}`}>Vagon {car.position}</Text>
+                        <View className={`rounded px-2 py-0.5 mr-2 ${dark ? 'bg-blue-900' : 'bg-blue-100'}`}>
+                          <Text className={`text-xs font-bold uppercase ${dark ? 'text-blue-100' : 'text-blue-800'}`}>Vagon {car.position}</Text>
                         </View>
                         <Text className={`text-xs font-bold ${subText}`}>{car.class} - {car.capacity}</Text>
                       </View>
