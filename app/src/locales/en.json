@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} min stop",
         "mapModalTitle": "Route map · {{train}}",
         "reportTime": "Now",
-        "addedAt": "Added: {{date}}"
+        "addedAt": "Added: {{date}}",
+        "facilities": "FACILITIES & COMPOSITION",
+        "locomotive": "Locomotive: {{class}}",
+        "maxSpeed": "Max speed: {{speed}}",
+        "car": "Car {{position}}"
     },
     "station": {
         "departures": "DEPARTURES",

@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} min halte",
         "mapModalTitle": "Routekaart · {{train}}",
         "reportTime": "Nu",
-        "addedAt": "Toegevoegd: {{date}}"
+        "addedAt": "Toegevoegd: {{date}}",
+        "facilities": "FACILITEITEN & SAMENSTELLING",
+        "locomotive": "Locomotief: {{class}}",
+        "maxSpeed": "Max snelheid: {{speed}}",
+        "car": "Rijtuig {{position}}"
     },
     "station": {
         "departures": "VERTREKKEN",

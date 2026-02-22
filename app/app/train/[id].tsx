@@ -535,7 +535,7 @@ export default function TrainDetailScreen() {
           <View className={`mt-3 mx-4 border rounded-2xl ${card}`}>
             <TouchableOpacity
               onPress={() => setShowReports(v => !v)}
-              activeOpacity={0.7}
+              activeOpacity={1}
               className="flex-row items-center justify-between px-4 py-4"
             >
               <View className="flex-row items-center">
@@ -590,7 +590,7 @@ export default function TrainDetailScreen() {
             <View className={`mt-3 mx-4 border rounded-2xl ${card}`}>
               <TouchableOpacity
                 onPress={() => setShowFacilities(v => !v)}
-                activeOpacity={0.7}
+                activeOpacity={1}
                 className="flex-row items-center justify-between px-4 py-4"
               >
                 <View className="flex-row items-center">
@@ -620,16 +620,16 @@ export default function TrainDetailScreen() {
                   )}
                   {composition.locomotive && (
                     <View className={`mt-2 py-3 border-b ${divider}`}>
-                      <Text className={`text-xs font-bold mb-1 ${subText}`}>Locomotivă: {composition.locomotive.class}</Text>
+                      <Text className={`text-xs font-bold mb-1 ${subText}`}>{t('trainDetail.locomotive', { class: composition.locomotive.class, defaultValue: `Locomotivă: ${composition.locomotive.class}` })}</Text>
                       <Text className={`text-sm ${headText}`}>{composition.locomotive.description} - {composition.locomotive.power}</Text>
-                      <Text className={`text-xs mt-1 ${subText}`}>Viteză maximă: {composition.locomotive.max_speed}</Text>
+                      <Text className={`text-xs mt-1 ${subText}`}>{t('trainDetail.maxSpeed', { speed: composition.locomotive.max_speed, defaultValue: `Viteză maximă: ${composition.locomotive.max_speed}` })}</Text>
                     </View>
                   )}
                   {composition.cars?.map((car: any, i: number) => (
                     <View key={i} className={`py-3 ${i < composition.cars.length - 1 ? `border-b ${divider}` : ''}`}>
                       <View className="flex-row items-center mb-1">
                         <View className={`rounded px-2 py-0.5 mr-2 ${dark ? 'bg-blue-900' : 'bg-blue-100'}`}>
-                          <Text className={`text-xs font-bold uppercase ${dark ? 'text-blue-100' : 'text-blue-800'}`}>Vagon {car.position}</Text>
+                          <Text className={`text-xs font-bold uppercase ${dark ? 'text-blue-100' : 'text-blue-800'}`}>{t('trainDetail.car', { position: car.position, defaultValue: `Vagon ${car.position}` })}</Text>
                         </View>
                         <Text className={`text-xs font-bold ${subText}`}>{car.class} - {car.capacity}</Text>
                       </View>

@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} min d'arrêt",
         "mapModalTitle": "Carte de l'itinéraire · {{train}}",
         "reportTime": "Maintenant",
-        "addedAt": "Ajouté le : {{date}}"
+        "addedAt": "Ajouté le : {{date}}",
+        "facilities": "ÉQUIPEMENTS ET COMPOSITION",
+        "locomotive": "Locomotive : {{class}}",
+        "maxSpeed": "Vitesse max : {{speed}}",
+        "car": "Voiture {{position}}"
     },
     "station": {
         "departures": "DÉPARTS",

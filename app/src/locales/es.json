@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} min parada",
         "mapModalTitle": "Mapa de ruta · {{train}}",
         "reportTime": "Ahora",
-        "addedAt": "Añadido: {{date}}"
+        "addedAt": "Añadido: {{date}}",
+        "facilities": "INSTALACIONES Y COMPOSICIÓN",
+        "locomotive": "Locomotora: {{class}}",
+        "maxSpeed": "Velocidad máxima: {{speed}}",
+        "car": "Coche {{position}}"
     },
     "station": {
         "departures": "SALIDAS",

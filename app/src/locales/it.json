@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} min sosta",
         "mapModalTitle": "Mappa percorso · {{train}}",
         "reportTime": "Ora",
-        "addedAt": "Aggiunto: {{date}}"
+        "addedAt": "Aggiunto: {{date}}",
+        "facilities": "SERVIZI E COMPOSIZIONE",
+        "locomotive": "Locomotiva: {{class}}",
+        "maxSpeed": "Velocità massima: {{speed}}",
+        "car": "Carrozza {{position}}"
     },
     "station": {
         "departures": "PARTENZE",

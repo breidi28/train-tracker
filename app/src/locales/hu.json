@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} perc tartózkodás",
         "mapModalTitle": "Útvonaltérkép · {{train}}",
         "reportTime": "Most",
-        "addedAt": "Hozzáadva: {{date}}"
+        "addedAt": "Hozzáadva: {{date}}",
+        "facilities": "FELSZERELTSÉG ÉS ÖSSZEÁLLÍTÁS",
+        "locomotive": "Mozdony: {{class}}",
+        "maxSpeed": "Max sebesség: {{speed}}",
+        "car": "Kocsi {{position}}"
     },
     "station": {
         "departures": "INDULÁSOK",

@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} min Aufenthalt",
         "mapModalTitle": "Streckenkarte · {{train}}",
         "reportTime": "Jetzt",
-        "addedAt": "Hinzugefügt: {{date}}"
+        "addedAt": "Hinzugefügt: {{date}}",
+        "facilities": "AUSSTATTUNG & ZUGZUSAMMENSTELLUNG",
+        "locomotive": "Lokomotive: {{class}}",
+        "maxSpeed": "Höchstgeschwindigkeit: {{speed}}",
+        "car": "Wagen {{position}}"
     },
     "station": {
         "departures": "ABFAHRTEN",

@@ -72,7 +72,11 @@
         "dwellLabel": "{{dwell}} min oprire",
         "mapModalTitle": "Harta rutei · {{train}}",
         "reportTime": "Acum",
-        "addedAt": "Adăugat: {{date}}"
+        "addedAt": "Adăugat: {{date}}",
+        "facilities": "FACILITĂȚI & GARNITURĂ",
+        "locomotive": "Locomotivă: {{class}}",
+        "maxSpeed": "Viteză maximă: {{speed}}",
+        "car": "Vagon {{position}}"
     },
     "station": {
         "departures": "PLECĂRI",
