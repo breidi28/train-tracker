@@ -111,6 +111,15 @@ function badgeBg(num: string): string {
   return CATEGORY_COLORS[p] ?? '#4B5563';
 }
 
+function isSeriousAlert(text: string): boolean {
+  const seriousKeywords = [
+    'transbordare', 'autobuz', 'bus', 'anulat', 'inchis',
+    'defect', 'accident', 'lucrari', 'incident', 'suspenda'
+  ];
+  const t = text.toLowerCase();
+  return seriousKeywords.some(k => t.includes(k));
+}
+
 // ─── Delay History Mini Chart ─────────────────────────────────────────────────
 function DelayChart({ history, dark, t }: { history: DelaySnapshot[]; dark: boolean; t: (key: string, opts?: any) => string }) {
   if (!history.length) return null;
@@ -222,6 +231,9 @@ export default function TrainDetailScreen() {
   // Composition / Facilities
   const [composition, setComposition] = useState<any>(null);
   const [showFacilities, setShowFacilities] = useState(false);
+
+  // Alerts modal
+  const [showAlertsModal, setShowAlertsModal] = useState(false);
 
   const load = async () => {
     hasScrolledRef.current = false; // reset so new data triggers auto-scroll
@@ -503,19 +515,7 @@ export default function TrainDetailScreen() {
             </View>
           )}
 
-          {/* ── Train Alerts / Warnings ───────────────────────────────── */}
-          {train?.alerts && train.alerts.length > 0 && (
-            <View className={`px-4 mt-3`}>
-              {train.alerts.map((alert: string, idx: number) => (
-                <View key={idx} className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg p-3 flex-row mb-2">
-                  <Ionicons name="warning" size={18} color="#EF4444" style={{ marginTop: 2 }} />
-                  <Text className="text-red-700 dark:text-red-400 text-sm ml-2 flex-1 flex-wrap">
-                    {alert}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          )}
+
 
           {/* ── Branch selector ───────────────────────────────────────── */}
           {branches.length > 1 && (
@@ -800,7 +800,42 @@ export default function TrainDetailScreen() {
               <Text className={`text-center py-4 ${subText}`}>{t('trainDetail.noStops')}</Text>
             )}
           </View>
+
+          {/* ── Train Alerts / Warnings (În stilul facilităților) ───────── */}
+          {train?.alerts && train.alerts.length > 0 && (() => {
+            const serious = train.alerts.some(isSeriousAlert);
+            const statusColor = serious ? '#EF4444' : '#0066CC';
+
+            return (
+              <View className={`mt-3 mx-4 mb-8 border rounded-2xl ${card}`}>
+                <TouchableOpacity
+                  onPress={() => setShowAlertsModal(true)}
+                  activeOpacity={0.7}
+                  className="flex-row items-center justify-between px-4 py-4"
+                >
+                  <View className="flex-row items-center">
+                    <Ionicons name="alert-circle" size={16} color={statusColor} />
+                    <Text className={`text-xs font-bold tracking-widest ml-2 ${subText}`}>
+                      {t('trainDetail.systemAlerts')}
+                    </Text>
+                    <View className="ml-2 w-2 h-2 rounded-full" style={{ backgroundColor: statusColor }} />
+                  </View>
+                  <View className="flex-row items-center">
+                    <Text className="text-primary text-xs font-bold mr-2">
+                      {t('trainDetail.viewAlerts')}
+                    </Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color={dark ? '#6B7280' : '#9CA3AF'}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            );
+          })()}
         </View>
+
       </ScrollView>
 
       {/* ── Map Modal ───────────────────────────────────────────────────── */}
@@ -878,6 +913,51 @@ export default function TrainDetailScreen() {
               ) : (
                 <Text className="text-white font-bold text-base">{t('trainDetail.reportSend')}</Text>
               )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── Alerts Modal ────────────────────────────────────────────────── */}
+      <Modal visible={showAlertsModal} animationType="slide" transparent={true} onRequestClose={() => setShowAlertsModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}>
+          <View className={`p-6 rounded-t-3xl ${dark ? 'bg-gray-950' : 'bg-white'}`} style={{ maxHeight: '70%' }}>
+            <View className="flex-row justify-between items-center mb-6">
+              <View className="flex-row items-center">
+                <Ionicons name="alert-circle" size={24} color={dark ? '#9CA3AF' : '#4B5563'} />
+                <Text className={`text-xl font-bold ml-2 ${headText}`}>{t('trainDetail.systemAlerts')}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAlertsModal(false)} activeOpacity={0.7}>
+                <Ionicons name="close-circle" size={28} color={dark ? '#374151' : '#D1D5DB'} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {train?.alerts?.map((alert: string, idx: number) => {
+                const serious = isSeriousAlert(alert);
+                const boxBg = serious
+                  ? (dark ? 'bg-red-950/10 border-red-900/30' : 'bg-red-50 border-red-100')
+                  : (dark ? 'bg-blue-950/10 border-blue-900/30' : 'bg-blue-50 border-blue-100');
+                const textColor = serious
+                  ? (dark ? 'text-red-400' : 'text-red-800')
+                  : (dark ? 'text-blue-400' : 'text-blue-800');
+
+                return (
+                  <View key={idx} className={`mb-4 p-4 rounded-2xl border ${boxBg}`}>
+                    <Text className={`text-sm leading-6 ${textColor}`}>
+                      {alert}
+                    </Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+
+            <TouchableOpacity
+              onPress={() => setShowAlertsModal(false)}
+              className="bg-primary rounded-2xl py-4 mt-4 items-center"
+              activeOpacity={0.8}
+            >
+              <Text className="text-white font-bold text-base">{t('common.back')}</Text>
             </TouchableOpacity>
           </View>
         </View>

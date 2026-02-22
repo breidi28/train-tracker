@@ -76,7 +76,9 @@
         "facilities": "FACILITĂȚI & GARNITURĂ",
         "locomotive": "Locomotivă: {{class}}",
         "maxSpeed": "Viteză maximă: {{speed}}",
-        "car": "Vagon {{position}}"
+        "car": "Vagon {{position}}",
+        "systemAlerts": "AVERTIZĂRI CFR",
+        "viewAlerts": "Vezi detalii transbordare"
     },
     "station": {
         "departures": "PLECĂRI",

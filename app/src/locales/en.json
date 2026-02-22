@@ -76,7 +76,9 @@
         "facilities": "FACILITIES & COMPOSITION",
         "locomotive": "Locomotive: {{class}}",
         "maxSpeed": "Max speed: {{speed}}",
-        "car": "Car {{position}}"
+        "car": "Car {{position}}",
+        "systemAlerts": "CFR ALERTS",
+        "viewAlerts": "View alert details"
     },
     "station": {
         "departures": "DEPARTURES",
