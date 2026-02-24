@@ -1,32 +1,32 @@
-# 🚄 Train Tracker - Trenul Meu
+# Train Tracker - Trenul Meu
 
 A comprehensive train tracking system for Romanian Railways (CFR) with a React Native mobile app and Python backend.
 
-## 📱 Project Overview
+## Project Overview
 
 This project consists of two main components:
 
 1. **Backend** - Python Flask API that scrapes CFR data and provides train information
 2. **Mobile App** - React Native application for iOS and Android
 
-## 🎯 Features
+## Features
 
 ### Mobile App
-- ✅ Real-time train tracking
-- ✅ Fast intelligent local query caching
-- ✅ Multi-language localized UI
-- ✅ Instant straight-line route map generation
-- ✅ FlatList optimized rapid rendering
-- ✅ Delay information and charts
+- Real-time train tracking
+- Fast intelligent local query caching
+- Multi-language localized UI
+- Instant straight-line route map generation
+- FlatList optimized rapid rendering
+- Delay information and charts
 
 ### Backend API
-- ✅ CFR Infofer and live board scraping
-- ✅ Fast TTL `cachetools` integration to radically save external API load
-- ✅ Brotli/Gzip payload compression via `Flask-Compress`
-- ✅ Dynamic robust `unified` station and train search
-- ✅ RESTful API endpoints
+- CFR Infofer and live board scraping
+- Fast TTL `cachetools` integration to radically save external API load
+- Brotli/Gzip payload compression via `Flask-Compress`
+- Dynamic robust `unified` station and train search
+- RESTful API endpoints
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.8+
@@ -55,9 +55,9 @@ npm start
 npx expo run:android  # or npx expo run:ios
 ```
 
-📖 See detailed setup instructions in the respective folder documentation.
+See detailed setup instructions in the respective folder documentation.
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 train-tracker/
@@ -92,7 +92,7 @@ Edit `app/src/api.ts` to configure:
 
 Or use the code itself to change UI/UX strings and tokens.
 
-## 📱 Mobile App Screens
+## Mobile App Screens
 
 | Screen | Description |
 |--------|-------------|
@@ -102,7 +102,7 @@ Or use the code itself to change UI/UX strings and tokens.
 | **Train Details** | Realtime train info & delays |
 | **Settings** | App configuration |
 
-## 🌐 API Endpoints
+## API Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
@@ -114,7 +114,7 @@ Or use the code itself to change UI/UX strings and tokens.
 
 See full API documentation in the backend README.
 
-## 🔌 Connecting Mobile to Backend
+## Connecting Mobile to Backend
 
 ### During Development
 
@@ -137,7 +137,7 @@ Find your IP:
 - Windows: `ipconfig`
 - macOS/Linux: `ifconfig` or `ip addr`
 
-## 🛠️ Development
+## Development
 
 ### Adding Features
 
@@ -150,7 +150,7 @@ Find your IP:
 - **Backend**: PEP 8 (Python)
 - **Mobile**: ESLint + Prettier (TypeScript/React)
 
-## 📦 Building for Production
+## Building for Production
 
 ### Mobile App
 
@@ -166,7 +166,7 @@ Open `mobile/ios/TrainTrackerApp.xcworkspace` in Xcode and archive.
 ### Backend
 Deploy using your preferred method (Docker, Railway, Heroku, etc.)
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -188,21 +188,21 @@ cd backend/cfr-iris-scraper
 pip install -r requirements.txt
 ```
 
-## 🤝 Contributing
+## Contributing
 
 This is a personal project, but feel free to fork and customize for your needs.
 
-## 📄 License
+## License
 
 See LICENSE file in repository.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - CFR (Romanian Railways) for public timetable data
 - React Native community
 - Open source contributors
 
-## 📞 Support
+## Support
 
 For issues and questions, please create an issue in the repository.
 
