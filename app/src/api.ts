@@ -48,9 +48,16 @@ export async function fetchTrainComposition(trainId: string) {
 
 // ── Station endpoints ──
 
+let cachedStations: any[] | null = null;
+
 export async function fetchStations() {
+  if (cachedStations) return cachedStations;
   const { data } = await api.get('/api/stations');
-  return Array.isArray(data) ? data : [];
+  if (Array.isArray(data)) {
+    cachedStations = data;
+    return cachedStations;
+  }
+  return [];
 }
 
 export async function searchStations(query: string) {

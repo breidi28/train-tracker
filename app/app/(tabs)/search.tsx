@@ -46,7 +46,7 @@ export default function SearchScreen() {
   // Debounced autocomplete
   useEffect(() => {
     const timer = setTimeout(async () => {
-      const q = query.trim();
+      const q = query.replace(/[^a-zA-Z0-9\s]/g, '').trim();
       const cacheKey = q.toLowerCase();
 
       if (q.length >= 2) {
@@ -95,7 +95,7 @@ export default function SearchScreen() {
   }, [query]);
 
   const handleSearch = async () => {
-    const q = query.trim();
+    const q = query.replace(/[^a-zA-Z0-9\s]/g, '').trim();
     if (!q) return;
     setShowSuggestions(false);
     setLoading(true);

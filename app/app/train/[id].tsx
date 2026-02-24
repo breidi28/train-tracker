@@ -685,10 +685,21 @@ export default function TrainDetailScreen() {
 
             {/* Absolute Timeline Calculation for Midnight Crossings */}
             {(() => {
+              // Filter stops natively
+              const visibleStops = showAllPoints ? stops : stops.filter((s: Stop, idx: number) => {
+                // Keep first and last nodes always
+                if (idx === 0 || idx === stops.length - 1) return true;
+                // A commercial passenger stop usually has both times.
+                // Pure passing checks only have an arrival or just observation marks.
+                return (s.arrival_time || s.arrivalTime) && (s.departure_time || s.departureTime);
+              });
+
+              if (visibleStops.length === 0) return null;
+
               const absoluteStops: (number | null)[] = [];
               let _lastMins = -1;
               let _dayOffset = 0;
-              for (const stop of stops) {
+              for (const stop of visibleStops) {
                 const timeStr = stop.departure_time ?? stop.departureTime ?? stop.arrival_time ?? stop.arrivalTime ?? '';
                 const rawMins = timeToMinutes(timeStr);
                 if (rawMins === null) {
@@ -727,13 +738,13 @@ export default function TrainDetailScreen() {
                 currentAbsoluteTime = currentMinsRaw + bestK * 1440;
               }
 
-              return stops.map((stop, i) => {
+              return visibleStops.map((stop: Stop, i: number) => {
                 const name = stop.station_name ?? stop.stationName ?? '-';
                 const arr = stop.arrival_time ?? stop.arrivalTime ?? '';
                 const dep = stop.departure_time ?? stop.departureTime ?? '';
                 const delay = stop.delay ?? stop.delay_minutes ?? 0;
                 const isFirst = i === 0;
-                const isLast = i === stops.length - 1;
+                const isLast = i === visibleStops.length - 1;
 
                 const isPassed = absoluteStops[i] !== null ? (absoluteStops[i]! < currentAbsoluteTime) : false;
                 const prevPassed = i > 0 && absoluteStops[i - 1] !== null ? (absoluteStops[i - 1]! < currentAbsoluteTime) : false;

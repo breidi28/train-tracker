@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
 import {
   View, Text, FlatList, TextInput,
   ActivityIndicator, TouchableOpacity,
@@ -15,6 +15,25 @@ interface Station {
   station_id: number;
   region?: string;
 }
+
+const StationItem = memo(({ item, dark, headTxt, subTxt, onPress }: {
+  item: Station, dark: boolean, headTxt: string, subTxt: string, onPress: () => void
+}) => {
+  return (
+    <TouchableOpacity
+      className={`border-b px-4 py-4 flex-row items-center ${dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}
+      activeOpacity={0.6}
+      onPress={onPress}
+    >
+      <Ionicons name="location-outline" size={18} color="#0066CC" style={{ marginRight: 10 }} />
+      <Text className={`text-sm font-semibold flex-1 ${headTxt}`}>{item.name}</Text>
+      {item.region ? (
+        <Text className={`text-xs mr-2 ${subTxt}`}>{item.region}</Text>
+      ) : null}
+      <Ionicons name="chevron-forward" size={18} color={dark ? '#4B5563' : '#D1D5DB'} />
+    </TouchableOpacity>
+  );
+});
 
 export default function StationsScreen() {
   const router = useRouter();
@@ -97,24 +116,23 @@ export default function StationsScreen() {
         data={filtered}
         keyExtractor={(item, index) => `${item.station_id}-${index}`}
         contentContainerStyle={{ paddingBottom: 32 }}
+        initialNumToRender={20}
+        maxToRenderPerBatch={15}
+        windowSize={11}
+        removeClippedSubviews={true}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            className={`border-b px-4 py-4 flex-row items-center ${dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}
-            activeOpacity={0.6}
+          <StationItem
+            item={item}
+            dark={dark}
+            headTxt={headTxt}
+            subTxt={subTxt}
             onPress={() =>
               router.push({
                 pathname: '/station/[id]',
                 params: { id: String(item.station_id), name: item.name },
               })
             }
-          >
-            <Ionicons name="location-outline" size={18} color="#0066CC" style={{ marginRight: 10 }} />
-            <Text className={`text-sm font-semibold flex-1 ${headTxt}`}>{item.name}</Text>
-            {item.region ? (
-              <Text className={`text-xs mr-2 ${subTxt}`}>{item.region}</Text>
-            ) : null}
-            <Ionicons name="chevron-forward" size={18} color={dark ? '#4B5563' : '#D1D5DB'} />
-          </TouchableOpacity>
+          />
         )}
         ListEmptyComponent={
           <Text className={`text-center mt-8 ${subTxt}`}>{t('search.noResults')}</Text>

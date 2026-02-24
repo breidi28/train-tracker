@@ -44,10 +44,20 @@ export function buildLeafletHtml(stations: MapStation[]): string {
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#e5e7eb}
   #map{width:100vw;height:100vh}
+  .gps-btn {
+    position: absolute; bottom: 20px; right: 20px; z-index: 1000;
+    background: white; border-radius: 50%; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: none; cursor: pointer;
+  }
+  .gps-btn svg { width: 24px; height: 24px; fill: #007AFF; }
 </style>
 </head>
 <body>
 <div id="map"></div>
+<button id="gpsBtn" class="gps-btn" style="display:none;" onclick="centerOnUser()">
+  <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+</button>
 <script>
 (function(){
   var STATIONS = ${stationsJson};
@@ -115,6 +125,15 @@ export function buildLeafletHtml(stations: MapStation[]): string {
     });
     userMarker = L.marker([lat,lon], {icon:icon, zIndexOffset:1000})
       .addTo(map).bindPopup('Tu esti aici');
+    
+    document.getElementById('gpsBtn').style.display = 'flex';
+  };
+
+  /* ── Center on User ── */
+  window.centerOnUser = function() {
+    if (userMarker) {
+      map.setView(userMarker.getLatLng(), 13, { animate: true });
+    }
   };
 })();
 </script>
