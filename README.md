@@ -13,19 +13,17 @@ This project consists of two main components:
 
 ### Mobile App
 - ✅ Real-time train tracking
-- ✅ Search trains by number or route  
-- ✅ View all railway stations
-- ✅ Delay information and alerts
-- ✅ Modern, intuitive UI
-- ✅ Offline capability (planned)
-- ✅ Push notifications (planned)
+- ✅ Fast intelligent local query caching
+- ✅ Multi-language localized UI
+- ✅ Instant straight-line route map generation
+- ✅ FlatList optimized rapid rendering
+- ✅ Delay information and charts
 
 ### Backend API
-- ✅ CFR data scraping and integration
-- ✅ Railway station database
-- ✅ Train schedule and routing
-- ✅ Real-time delay information
-- ✅ Government railway data integration
+- ✅ CFR Infofer and live board scraping
+- ✅ Fast TTL `cachetools` integration to radically save external API load
+- ✅ Brotli/Gzip payload compression via `Flask-Compress`
+- ✅ Dynamic robust `unified` station and train search
 - ✅ RESTful API endpoints
 
 ## 🚀 Quick Start
@@ -49,17 +47,15 @@ Backend will run at `http://localhost:5000`
 ### 2. Start Mobile App
 
 ```bash
-cd mobile
+cd app
 npm install
 npm start
 
-# In another terminal
-npm run android  # or npm run ios
+# In another terminal (with device/emulator open)
+npx expo run:android  # or npx expo run:ios
 ```
 
-📖 See detailed setup instructions:
-- [Mobile App Setup](mobile/GETTING_STARTED.md)
-- [Backend Documentation](backend/cfr-iris-scraper/README.md)
+📖 See detailed setup instructions in the respective folder documentation.
 
 ## 📂 Project Structure
 
@@ -72,16 +68,17 @@ train-tracker/
 │       ├── requirements.txt  # Python dependencies
 │       └── README.md         # Backend docs
 │
-└── mobile/                    # React Native app
+└── app/                       # React Native Expo app
     ├── src/
-    │   ├── components/       # UI components
-    │   ├── screens/          # App screens
-    │   ├── navigation/       # Navigation setup
-    │   ├── services/         # API integration
-    │   └── types/           # TypeScript types
-    ├── android/             # Android native code
-    ├── ios/                 # iOS native code
-    └── README.md           # Mobile app docs
+    │   ├── api.ts            # API service
+    │   ├── storage.ts        # Encrypted storage utilities
+    │   └── locales/          # i18n translations
+    ├── app/                  # File-based routing (app directory)
+    │   ├── (tabs)/           # Tabbed screens (Home, Stations, Search)
+    │   ├── train/            # Train details
+    │   └── station/          # Station details
+    ├── package.json          # npm dependencies
+    └── tailwind.config.js    # NativeWind setup
 ```
 
 ## 🔧 Configuration
@@ -90,13 +87,10 @@ train-tracker/
 Edit `backend/cfr-iris-scraper/src/config.py` for backend settings.
 
 ### Mobile App
-Edit `mobile/src/config.ts` to configure:
+Edit `app/src/api.ts` to configure:
 - API endpoint URLs
-- Timeouts and intervals
-- Feature flags
-- Theme colors
 
-Or use the in-app Settings screen to change the backend URL dynamically.
+Or use the code itself to change UI/UX strings and tokens.
 
 ## 📱 Mobile App Screens
 

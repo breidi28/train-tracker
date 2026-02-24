@@ -22,6 +22,8 @@ function categoryColor(trainNumber: string): string {
   const prefix = trainNumber.split(/[\s\d]/)[0]?.toUpperCase() ?? '';
   return CATEGORY_COLORS[prefix] ?? '#4B5563';
 }
+// Module-level cache to prevent redundant API fetches while typing/backspacing
+const queryCache: Record<string, any[]> = {};
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -49,10 +51,20 @@ export default function HomeScreen() {
   useEffect(() => {
     const timer = setTimeout(async () => {
       const q = trainNumber.trim();
+      const cacheKey = q.toLowerCase();
+
       if (q.length >= 2) {
+        if (queryCache[cacheKey]) {
+          setSuggestions(queryCache[cacheKey]);
+          setShowSuggestions(true);
+          return;
+        }
+
         try {
           const data = await searchTrains(q);
-          setSuggestions(data.results?.slice(0, 4) ?? []);
+          const results = data.results?.slice(0, 4) ?? [];
+          queryCache[cacheKey] = results;
+          setSuggestions(results);
           setShowSuggestions(true);
         } catch {
           setSuggestions([]);

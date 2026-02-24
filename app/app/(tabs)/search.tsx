@@ -17,7 +17,7 @@ function categoryColor(trainNumber: string) {
   return CATEGORY_COLORS[p] ?? '#4B5563';
 }
 
-interface UnifiedResult {
+export interface UnifiedResult {
   type: 'train' | 'station';
   id: string; // train_number or station_id
   title: string;
@@ -26,6 +26,9 @@ interface UnifiedResult {
   departure_time?: string;
   arrival_time?: string;
 }
+
+// Module-level cache to prevent redudant API fetches while typing/backspacing
+const queryCache: Record<string, UnifiedResult[]> = {};
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -44,7 +47,15 @@ export default function SearchScreen() {
   useEffect(() => {
     const timer = setTimeout(async () => {
       const q = query.trim();
+      const cacheKey = q.toLowerCase();
+
       if (q.length >= 2) {
+        if (queryCache[cacheKey]) {
+          setSuggestions(queryCache[cacheKey]);
+          setShowSuggestions(true);
+          return;
+        }
+
         try {
           const [trainData, stationData] = await Promise.all([
             searchTrains(q).catch(() => ({ results: [] })),
@@ -69,6 +80,7 @@ export default function SearchScreen() {
             }))
           ];
           setSuggestions(unified);
+          queryCache[cacheKey] = unified;
           setShowSuggestions(true);
         } catch {
           setSuggestions([]);

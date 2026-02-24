@@ -4,7 +4,7 @@ import {
   TouchableOpacity, RefreshControl, FlatList, Share
 } from 'react-native';
 import { useLocalSearchParams, Stack, Link } from 'expo-router';
-import { fetchStationDepartures, fetchStationArrivals } from '../../src/api';
+import { fetchStationTimetable } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -75,10 +75,11 @@ export default function StationDetailScreen() {
   const load = async () => {
     try {
       setError('');
-      const [deps, arrs] = await Promise.all([
-        fetchStationDepartures(stationId),
-        fetchStationArrivals(stationId),
-      ]);
+      const data = await fetchStationTimetable(stationId);
+
+      const deps = data.filter((item: any) => item.is_origin || (item.is_stop && item.departure_time));
+      const arrs = data.filter((item: any) => item.is_destination || (item.is_stop && item.arrival_time));
+
       setDepartures(deps);
       setArrivals(arrs);
     } catch (e: any) {
@@ -245,6 +246,10 @@ export default function StationDetailScreen() {
             ref={flatListRef}
             data={data}
             className="flex-1"
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            windowSize={5}
+            removeClippedSubviews={true}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066CC']} />
             }

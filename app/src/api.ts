@@ -63,46 +63,6 @@ export async function fetchStationTimetable(stationId: number) {
   return data;
 }
 
-export async function fetchStationDepartures(stationId: number) {
-  // Get full timetable and filter client-side for better reliability
-  const { data } = await api.get(`/station/${stationId}`);
-  console.log(`[API] Full timetable for station ${stationId}:`, data);
-
-  if (!Array.isArray(data)) {
-    console.warn(`[API] Timetable response is not an array:`, data);
-    return [];
-  }
-
-  // Check data sources
-  const liveCount = data.filter((item: any) => item.data_source === 'iris_live').length;
-  const govCount = data.filter((item: any) => item.data_source === 'government_xml').length;
-  console.log(`[API] Data sources - IRIS Live: ${liveCount}, Government XML: ${govCount}`);
-
-  // Filter for departures: trains that originate here or stop here (have departure time)
-  const departures = data.filter((item: any) =>
-    item.is_origin || (item.is_stop && item.departure_time)
-  );
-  console.log(`[API] Filtered ${departures.length} departures from ${data.length} total items`);
-  return departures;
-}
-
-export async function fetchStationArrivals(stationId: number) {
-  // Get full timetable and filter client-side for better reliability
-  const { data } = await api.get(`/station/${stationId}`);
-  console.log(`[API] Full timetable for station ${stationId}:`, data);
-
-  if (!Array.isArray(data)) {
-    console.warn(`[API] Timetable response is not an array:`, data);
-    return [];
-  }
-
-  // Filter for arrivals: trains that end here or stop here (have arrival time)
-  const arrivals = data.filter((item: any) =>
-    item.is_destination || (item.is_stop && item.arrival_time)
-  );
-  console.log(`[API] Filtered ${arrivals.length} arrivals from ${data.length} total items`);
-  return arrivals;
-}
 
 // ── Status ──
 
