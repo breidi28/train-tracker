@@ -17,12 +17,11 @@ export interface MapViewHandle {
 
 interface Props {
     html: string;
-    onRailPath?: (path: [number, number][]) => void;
     handleRef?: (handle: MapViewHandle | null) => void;
 }
 
 // ── Web implementation ─────────────────────────────────────────────────────────
-function WebMapView({ html, onRailPath, handleRef }: Props) {
+function WebMapView({ html, handleRef }: Props) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
 
     // Expose imperative handle so parent can push user location
@@ -39,21 +38,6 @@ function WebMapView({ html, onRailPath, handleRef }: Props) {
         return () => handleRef?.(null);
     }, [handleRef]);
 
-    // Listen for railPath messages coming out of the iframe
-    useEffect(() => {
-        if (!onRailPath) return;
-        const listener = (event: MessageEvent) => {
-            try {
-                const msg = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                if (msg?.type === 'railPath' && msg.path) {
-                    onRailPath(msg.path);
-                }
-            } catch { }
-        };
-        window.addEventListener('message', listener);
-        return () => window.removeEventListener('message', listener);
-    }, [onRailPath]);
-
     return (
         <iframe
             ref={iframeRef}
@@ -66,7 +50,7 @@ function WebMapView({ html, onRailPath, handleRef }: Props) {
 }
 
 // ── Native implementation ──────────────────────────────────────────────────────
-function NativeMapView({ html, onRailPath, handleRef }: Props) {
+function NativeMapView({ html, handleRef }: Props) {
     // Dynamic import so the web build never bundles react-native-webview
     const WebView = require('react-native-webview').WebView;
     const webviewRef = useRef<any>(null);
@@ -92,14 +76,6 @@ function NativeMapView({ html, onRailPath, handleRef }: Props) {
             javaScriptEnabled
             domStorageEnabled
             geolocationEnabled
-            onMessage={(event: any) => {
-                try {
-                    const msg = JSON.parse(event.nativeEvent.data);
-                    if (msg?.type === 'railPath' && msg.path && onRailPath) {
-                        onRailPath(msg.path);
-                    }
-                } catch { }
-            }}
         />
     );
 }

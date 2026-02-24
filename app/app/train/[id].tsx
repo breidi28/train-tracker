@@ -19,7 +19,6 @@ import {
 import {
   recordRecentSearch, getDelayHistory, type DelaySnapshot,
   getFavoriteTrains, toggleFavoriteTrain,
-  getMapRouteCache, saveMapRouteCache,
   saveTrainCache, getTrainCache,
 } from '../../src/storage';
 import { useTheme } from '../../src/ThemeContext';
@@ -202,7 +201,6 @@ export default function TrainDetailScreen() {
   const [mapHtml, setMapHtml] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const mapHandleRef = useRef<MapViewHandle | null>(null);
-  const mapCacheKeyRef = useRef<string>('');
 
   const scrollViewRef = useRef<ScrollView>(null);
   // Y-positions of each stop row, keyed by stop index
@@ -319,11 +317,7 @@ export default function TrainDetailScreen() {
 
     const names = ss.map((s) => ({ name: s.station_name ?? s.stationName ?? '' })).filter(s => s.name);
     if (!names.length) return;
-    const fingerprint = names.map(n => n.name).join('~');
-    mapCacheKeyRef.current = fingerprint;
-    getMapRouteCache(fingerprint).then(cached => {
-      setMapHtml(buildLeafletHtml(names, cached));
-    });
+    setMapHtml(buildLeafletHtml(names));
   }, [train, selectedBranch, showAllPoints]);
 
   // GPS for map
@@ -919,9 +913,6 @@ export default function TrainDetailScreen() {
           <CrossPlatformMapView
             html={mapHtml}
             handleRef={(h) => { mapHandleRef.current = h; }}
-            onRailPath={(path) => {
-              if (mapCacheKeyRef.current) saveMapRouteCache(mapCacheKeyRef.current, path);
-            }}
           />
         </View>
       </Modal>
