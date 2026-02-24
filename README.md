@@ -81,7 +81,7 @@ train-tracker/
     └── tailwind.config.js    # NativeWind setup
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Backend
 Edit `backend/cfr-iris-scraper/src/config.py` for backend settings.
