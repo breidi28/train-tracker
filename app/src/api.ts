@@ -22,7 +22,7 @@ export const API_BASE = getBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 15000,
+  timeout: 60000,
 });
 
 // ── Train endpoints ──
