@@ -19,7 +19,9 @@
         "arr": "Aank",
         "dep": "Vert",
         "next": "VOLGENDE",
-        "noData": "Geen gegevens beschikbaar"
+        "noData": "Geen gegevens beschikbaar",
+        "today": "Vandaag",
+        "tomorrow": "Morgen"
     },
     "home": {
         "searchTrain": "TREIN ZOEKEN",
@@ -75,6 +77,8 @@
         "reportTime": "Nu",
         "addedAt": "Toegevoegd: {{date}}",
         "facilities": "FACILITEITEN & SAMENSTELLING",
+        "coachOrder": "Volgorde wagons per station",
+        "selectStation": "Selecteer station",
         "locomotive": "Locomotief: {{class}}",
         "maxSpeed": "Max snelheid: {{speed}}",
         "car": "Rijtuig {{position}}",

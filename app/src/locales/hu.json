@@ -19,7 +19,9 @@
         "arr": "Érk",
         "dep": "Ind",
         "next": "KÖVETKEZŐ",
-        "noData": "Nincs elérhető adat"
+        "noData": "Nincs elérhető adat",
+        "today": "Ma",
+        "tomorrow": "Holnap"
     },
     "home": {
         "searchTrain": "VONAT KERESÉSE",
@@ -75,6 +77,8 @@
         "reportTime": "Most",
         "addedAt": "Hozzáadva: {{date}}",
         "facilities": "FELSZERELTSÉG ÉS ÖSSZEÁLLÍTÁS",
+        "coachOrder": "Kocsisorrend állomásonként",
+        "selectStation": "Állomás kiválasztása",
         "locomotive": "Mozdony: {{class}}",
         "maxSpeed": "Max sebesség: {{speed}}",
         "car": "Kocsi {{position}}",

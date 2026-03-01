@@ -19,7 +19,9 @@
         "arr": "Arr",
         "dep": "Dep",
         "next": "NEXT",
-        "noData": "No data available"
+        "noData": "No data available",
+        "today": "Today",
+        "tomorrow": "Tomorrow"
     },
     "home": {
         "searchTrain": "SEARCH TRAIN",
@@ -75,6 +77,8 @@
         "reportTime": "Now",
         "addedAt": "Added: {{date}}",
         "facilities": "FACILITIES & COMPOSITION",
+        "coachOrder": "Coach order per station",
+        "selectStation": "Select station",
         "locomotive": "Locomotive: {{class}}",
         "maxSpeed": "Max speed: {{speed}}",
         "car": "Car {{position}}",
@@ -103,7 +107,8 @@
         "retroPlatform": "TRCK",
         "onTimShort": "ON TM",
         "unknown": "UNKNOWN",
-        "searchPlaceholder": "Search for a station..."
+        "searchPlaceholder": "Search for a station...",
+        "selectDate": "Select Date"
     },
     "search": {
         "title": "Search",

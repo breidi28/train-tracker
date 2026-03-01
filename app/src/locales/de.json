@@ -19,7 +19,9 @@
         "arr": "Ank",
         "dep": "Abf",
         "next": "NÄCHSTER",
-        "noData": "Keine Daten verfügbar"
+        "noData": "Keine Daten verfügbar",
+        "today": "Heute",
+        "tomorrow": "Morgen"
     },
     "home": {
         "searchTrain": "ZUG SUCHEN",
@@ -75,6 +77,8 @@
         "reportTime": "Jetzt",
         "addedAt": "Hinzugefügt: {{date}}",
         "facilities": "AUSSTATTUNG & ZUGZUSAMMENSTELLUNG",
+        "coachOrder": "Wagonreihenfolge pro Station",
+        "selectStation": "Station wählen",
         "locomotive": "Lokomotive: {{class}}",
         "maxSpeed": "Höchstgeschwindigkeit: {{speed}}",
         "car": "Wagen {{position}}",

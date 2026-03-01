@@ -21,15 +21,22 @@ const StationItem = memo(({ item, dark, headTxt, subTxt, onPress }: {
 }) => {
   return (
     <TouchableOpacity
-      className={`border-b px-4 py-4 flex-row items-center ${dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}
-      activeOpacity={0.6}
+      activeOpacity={0.7}
       onPress={onPress}
+      className={`mx-4 my-1.5 px-4 py-5 rounded-2xl border flex-row items-center ${dark ? 'bg-[#111827] border-gray-800' : 'bg-white border-gray-100 shadow-sm'
+        }`}
     >
-      <Ionicons name="location-outline" size={18} color="#0066CC" style={{ marginRight: 10 }} />
-      <Text className={`text-sm font-semibold flex-1 ${headTxt}`}>{item.name}</Text>
-      {item.region ? (
-        <Text className={`text-xs mr-2 ${subTxt}`}>{item.region}</Text>
-      ) : null}
+      <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${dark ? 'bg-gray-800' : 'bg-blue-50'}`}>
+        <Ionicons name="location" size={20} color="#0066CC" />
+      </View>
+      <View className="flex-1">
+        <Text className={`text-base font-bold ${headTxt}`}>{item.name}</Text>
+        {item.region ? (
+          <Text className={`text-xs mt-0.5 ${subTxt}`}>{item.region}</Text>
+        ) : (
+          <Text className={`text-xs mt-0.5 ${subTxt}`}>Stație CFR</Text>
+        )}
+      </View>
       <Ionicons name="chevron-forward" size={18} color={dark ? '#4B5563' : '#D1D5DB'} />
     </TouchableOpacity>
   );
@@ -104,18 +111,27 @@ export default function StationsScreen() {
   return (
     <View className={`flex-1 ${bg}`}>
       <View className={`px-4 pt-4 pb-3 border-b ${card}`}>
-        <TextInput
-          className={`border rounded-xl px-4 py-3 text-base ${inputBg}`}
-          placeholder={t('station.searchPlaceholder')}
-          placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
-          value={query}
-          onChangeText={setQuery}
-        />
+        <View className={`flex-row items-center border rounded-xl px-3 ${inputBg}`}>
+          <Ionicons name="search" size={18} color={dark ? '#6B7280' : '#9CA3AF'} />
+          <TextInput
+            className={`flex-1 py-3 px-2 text-base ${dark ? 'text-white' : 'text-gray-900'}`}
+            placeholder={t('station.searchPlaceholder')}
+            placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
+            value={query}
+            onChangeText={setQuery}
+            returnKeyType="search"
+          />
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery('')} activeOpacity={0.7}>
+              <Ionicons name="close-circle" size={18} color={dark ? '#6B7280' : '#9CA3AF'} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       <FlatList
         data={filtered}
         keyExtractor={(item, index) => `${item.station_id}-${index}`}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 32 }}
         initialNumToRender={20}
         maxToRenderPerBatch={15}
         windowSize={11}

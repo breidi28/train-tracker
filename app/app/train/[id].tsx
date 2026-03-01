@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   View, Text, ScrollView, ActivityIndicator,
-  TouchableOpacity, RefreshControl, Modal, Alert, TextInput, Share
+  TouchableOpacity, RefreshControl, Modal, Alert, TextInput, Share, Platform
 } from 'react-native';
+import WebDetailWrapper from '../../src/WebDetailWrapper';
 import CrossPlatformMapView, { type MapViewHandle } from '../../src/CrossPlatformMapView';
 import * as Location from 'expo-location';
 
@@ -12,6 +13,7 @@ import { fetchTrain, fetchTrainReports, fetchTrainComposition, submitTrainReport
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { categoryColor } from '../../src/trainColors';
 
 import {
   isTrainWatched, addWatchedTrain, removeWatchedTrain, requestNotificationPermission,
@@ -102,12 +104,17 @@ function delayColor(min: number | null | undefined): string {
   if (min <= 5) return '#D97706';
   return '#DC2626';
 }
-const CATEGORY_COLORS: Record<string, string> = {
-  IC: '#008000', IR: '#f00', IRN: '#f00', R: '#000', 'R-E': '#000',
-};
+
+function formatTrainId(trainId: string | undefined): string {
+  if (!trainId) return '—';
+  // If it already has a space, return as is
+  if (trainId.includes(' ')) return trainId;
+  // Otherwise, insert space between rank and numbers (e.g. IR1575 -> IR 1575)
+  return trainId.replace(/^([a-zA-Z-]+)(\d+)$/, '$1 $2');
+}
+// categoryColor and badgeBg now use shared trainColors module
 function badgeBg(num: string): string {
-  const p = num.split(/[\s\d]/)[0]?.toUpperCase() ?? '';
-  return CATEGORY_COLORS[p] ?? '#4B5563';
+  return categoryColor(num);
 }
 
 function isSeriousAlert(text: string): boolean {
@@ -230,6 +237,10 @@ export default function TrainDetailScreen() {
   const [composition, setComposition] = useState<any>(null);
   const [showFacilities, setShowFacilities] = useState(false);
 
+  // station picker for coach order
+  const [selectedStation, setSelectedStation] = useState<string | null>(null);
+  const [stationPickerVisible, setStationPickerVisible] = useState(false);
+
   // Alerts modal
   const [showAlertsModal, setShowAlertsModal] = useState(false);
 
@@ -273,6 +284,60 @@ export default function TrainDetailScreen() {
       setRefreshing(false);
     }
   };
+
+  // derive ordered list of stations for dropdown, preferring server-provided options
+  type StationEntry = { key: string; label: string };
+  let stationList: StationEntry[] = [];
+  if (composition?.coach_order) {
+    const coachKeys = Object.keys(composition.coach_order || {});
+    const optionNames: string[] = composition.station_options ? composition.station_options.map((o: any) => o.name) : [];
+
+    const normalize = (s: string) =>
+      s
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+
+    const coachNormMap: Record<string, string> = {};
+    for (const k of coachKeys) {
+      try {
+        coachNormMap[normalize(k)] = k;
+      } catch {
+        coachNormMap[k.trim().toLowerCase()] = k;
+      }
+    }
+
+    const ordered: StationEntry[] = [];
+    // keep the order suggested by station_options when possible (match normalized forms)
+    for (const name of optionNames) {
+      const nk = normalize(name);
+      const coachKey = coachNormMap[nk];
+      if (coachKey && !ordered.find(o => o.key === coachKey)) {
+        ordered.push({ key: coachKey, label: name });
+      }
+    }
+
+    // append any stations that appear only in coach_order (avoid losing last station)
+    for (const k of coachKeys) {
+      if (!ordered.find(o => o.key === k)) ordered.push({ key: k, label: k });
+    }
+
+    stationList = ordered;
+  } else {
+    stationList = [];
+  }
+
+  // when we receive a new composition with coach order, default the selected station (use key)
+  useEffect(() => {
+    if (stationList.length && !selectedStation) {
+      setSelectedStation(stationList[0].key);
+    }
+  }, [stationList]);
+
+  const selectedStationLabel = selectedStation ? (stationList.find(s => s.key === selectedStation)?.label ?? selectedStation) : null;
 
   useEffect(() => { load(); }, [id]);
   const onRefresh = () => { setRefreshing(true); load(); };
@@ -412,7 +477,8 @@ export default function TrainDetailScreen() {
 
   const stops = showAllPoints ? allStops : allStops.filter((s: any) => s.is_stop !== false);
 
-  const trainNumber = train?.train_number ?? train?.trainNumber ?? id ?? '';
+  const rawId = train?.train_number ?? train?.trainNumber ?? id ?? '';
+  const trainNumber = formatTrainId(rawId);
   const route = train?.route_name ?? train?.route ?? '';
   const operator = train?.operator ?? 'CFR Călători';
   const hasLive = train?.data_source?.has_live_delays === true;
@@ -460,8 +526,20 @@ export default function TrainDetailScreen() {
   }
 
   return (
-    <>
+    <WebDetailWrapper>
+      {/* Stack.Screen only sets native header title; suppressed on web */}
       <Stack.Screen options={{ title: trainNumber }} />
+      {/* Web-only back button + page title bar */}
+      {Platform.OS === 'web' && (
+        <View style={{ backgroundColor: '#0066CC', paddingVertical: 12, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={{ marginRight: 12, flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="arrow-back" size={20} color="#fff" />
+          </TouchableOpacity>
+          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 17, flex: 1 }} numberOfLines={1}>
+            {trainNumber}{route ? ` · ${route}` : ''}
+          </Text>
+        </View>
+      )}
       <ScrollView
         ref={scrollViewRef}
         className={`flex-1 ${bg}`}
@@ -472,7 +550,7 @@ export default function TrainDetailScreen() {
           {/* ── Header ────────────────────────────────────────────────── */}
           <View className={`border-b px-4 py-4 flex-row items-center ${card}`}>
             <View
-              style={{ backgroundColor: badgeBg(trainNumber) }}
+              style={{ backgroundColor: badgeBg(rawId) }}
               className="rounded-lg px-3 py-1.5"
             >
               <Text className="text-white font-bold text-base">{trainNumber}</Text>
@@ -636,6 +714,142 @@ export default function TrainDetailScreen() {
                           <Text className={`text-xs font-semibold ml-1 ${dark ? 'text-gray-300' : 'text-gray-700'}`}>{service}</Text>
                         </View>
                       ))}
+                    </View>
+                  )}
+                  {/* coach order by station */}
+                  {composition.coach_order && (
+                    <View className="mb-2">
+                      <Text className={`text-xs font-bold mb-2 ${subText}`}>{t('trainDetail.coachOrder', { defaultValue: 'Ordinea vagoanelor per stație' })}</Text>
+
+                      {/* ── Station picker: inline pills on web, collapsible dropdown on mobile ── */}
+                      {Platform.OS === 'web' ? (
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                          {stationList.map((entry, i) => (
+                            <TouchableOpacity
+                              key={`${entry.key}-${i}`}
+                              onPress={() => setSelectedStation(entry.key)}
+                              activeOpacity={0.75}
+                            >
+                              <View style={[
+                                {
+                                  paddingHorizontal: 14,
+                                  paddingVertical: 6,
+                                  borderRadius: 999,
+                                  borderWidth: 1.5,
+                                },
+                                selectedStation === entry.key
+                                  ? { backgroundColor: '#0066CC', borderColor: '#0066CC' }
+                                  : { backgroundColor: dark ? '#1F2937' : '#F3F4F6', borderColor: dark ? '#374151' : '#E5E7EB' },
+                              ]}>
+                                <Text style={[
+                                  { fontSize: 13, fontWeight: '600' },
+                                  selectedStation === entry.key
+                                    ? { color: '#FFFFFF' }
+                                    : { color: dark ? '#E5E7EB' : '#374151' },
+                                ]}>{entry.label}</Text>
+                              </View>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      ) : (
+                        <View className={`mb-2 border rounded-2xl overflow-hidden ${card}`}>
+                          <TouchableOpacity
+                            onPress={() => setStationPickerVisible(v => !v)}
+                            activeOpacity={1}
+                            className="flex-row items-center justify-between px-4 py-3"
+                          >
+                            <Text className={`text-xs font-bold tracking-widest ${subText}`}>{selectedStationLabel || t('trainDetail.selectStation')}</Text>
+                            <Ionicons
+                              name={stationPickerVisible ? 'chevron-up' : 'chevron-down'}
+                              size={18}
+                              color={dark ? '#6B7280' : '#9CA3AF'}
+                            />
+                          </TouchableOpacity>
+                          {stationPickerVisible && (
+                            <View className={`${dark ? 'bg-gray-800' : 'bg-gray-100'} rounded-b-2xl px-4 py-3`} style={{ maxHeight: 220 }}>
+                              <View className="flex-row flex-wrap">
+                                {stationList.map((entry, i) => (
+                                  <TouchableOpacity
+                                    key={`${entry.key}-${i}`}
+                                    onPress={() => { setSelectedStation(entry.key); setStationPickerVisible(false); }}
+                                    className="mr-2 mb-2"
+                                  >
+                                    <View className={`flex-row items-center rounded-full px-3 py-1 ${selectedStation === entry.key
+                                      ? 'bg-primary'
+                                      : (dark ? 'bg-gray-700' : 'bg-gray-200')
+                                      }`}>
+                                      <Text className={`${selectedStation === entry.key ? 'text-white' : (dark ? 'text-white' : 'text-black')} text-sm`}>{entry.label}</Text>
+                                    </View>
+                                  </TouchableOpacity>
+                                ))}
+                              </View>
+                            </View>
+                          )}
+                        </View>
+                      )}
+
+                      {selectedStation && (
+                        <View className="mb-2">
+                          {/* horizontal car order pills */}
+                          <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ paddingVertical: 4, gap: 8 }}
+                          >
+                            {composition.coach_order[selectedStation].map((c: string, idx: number) => {
+                              const cls = composition.coach_classes?.[c] || '';
+                              const isFirstClass = cls.toLowerCase().includes('1');
+                              return (
+                                <View
+                                  key={idx}
+                                  style={[
+                                    {
+                                      borderRadius: 8,
+                                      paddingHorizontal: 10,
+                                      paddingVertical: 6,
+                                      alignItems: 'center',
+                                      minWidth: 44,
+                                    },
+                                    isFirstClass
+                                      ? { backgroundColor: dark ? '#7F1D1D' : '#FEE2E2', borderWidth: 1, borderColor: dark ? '#991B1B' : '#FCA5A5' }
+                                      : { backgroundColor: dark ? '#1E3A5F' : '#DBEAFE', borderWidth: 1, borderColor: dark ? '#1D4ED8' : '#93C5FD' },
+                                  ]}
+                                >
+                                  <Text style={[
+                                    { fontSize: 14, fontWeight: '800' },
+                                    isFirstClass
+                                      ? { color: dark ? '#FCA5A5' : '#991B1B' }
+                                      : { color: dark ? '#93C5FD' : '#1D4ED8' },
+                                  ]}>{c}</Text>
+                                  {cls ? (
+                                    <Text style={[
+                                      { fontSize: 9, fontWeight: '600', marginTop: 2, letterSpacing: 0.3 },
+                                      isFirstClass
+                                        ? { color: dark ? '#FCA5A5' : '#B91C1C' }
+                                        : { color: dark ? '#93C5FD' : '#1E40AF' },
+                                    ]} numberOfLines={1}>
+                                      {isFirstClass ? 'Cls 1' : 'Cls 2'}
+                                    </Text>
+                                  ) : null}
+                                </View>
+                              );
+                            })}
+                          </ScrollView>
+
+                          {/* class legend — deduped unique classes */}
+                          {composition.coach_order[selectedStation].some((c: string) => composition.coach_classes?.[c]) && (
+                            <Text className={`text-xs mt-1 ${subText}`}>
+                              {[
+                                ...new Set(
+                                  composition.coach_order[selectedStation]
+                                    .map((c: string) => composition.coach_classes?.[c] || '')
+                                    .filter(Boolean)
+                                )
+                              ].join(' · ')}
+                            </Text>
+                          )}
+                        </View>
+                      )}
                     </View>
                   )}
                   {composition.locomotive && (
@@ -1028,6 +1242,6 @@ export default function TrainDetailScreen() {
           </View>
         </View>
       </Modal>
-    </>
+    </WebDetailWrapper>
   );
 }

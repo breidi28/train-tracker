@@ -1,0 +1,105 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Web-only styles — loaded ONLY when Expo builds for the browser.
+   NativeWind never processes this file, so pseudo-elements, @media (hover),
+   -webkit- prefixes, ::selection etc. are all safe here.
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Font smoothing & body defaults */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+    background-color: #F5F6F8;
+}
+
+#root,
+body,
+html {
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* ── Nav link hover effect (blue underline) ── */
+@media (hover: hover) {
+
+    /* Nav link hover */
+    .ns-nav-link {
+        position: relative;
+        transition: color 0.15s ease;
+    }
+
+    .ns-nav-link:hover {
+        color: #0066CC !important;
+    }
+
+    /* Animated blue underline */
+    .ns-nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 3px;
+        background-color: #0066CC;
+        transition: width 0.2s ease;
+    }
+
+    .ns-nav-link:hover::after {
+        width: 100%;
+    }
+
+    /* Card lift effect */
+    .ns-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(0, 102, 204, 0.10);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    /* All interactive elements get pointer cursor */
+    [role="button"],
+    button,
+    a {
+        cursor: pointer;
+    }
+}
+
+/* ── Card base style ── */
+.ns-card {
+    background: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #E4E4E4;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* ── Input focus ring (Brand blue glow) ── */
+input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.18);
+    border-color: #0066CC !important;
+    transition: box-shadow 0.15s ease;
+}
+
+/* ── Slim custom scrollbar ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 102, 204, 0.20);
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 102, 204, 0.40);
+}
+
+/* ── Selection highlight (Brand blue) ── */
+::selection {
+    background-color: rgba(0, 102, 204, 0.2) !important;
+    color: #0066CC !important;
+}

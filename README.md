@@ -20,11 +20,11 @@ This project consists of two main components:
 - Delay information and charts
 
 ### Backend API
-- CFR Infofer and live board scraping
+- CFR Infofer and live board scraping (including services, composition, coach order and classes)
 - Fast TTL `cachetools` integration to radically save external API load
 - Brotli/Gzip payload compression via `Flask-Compress`
 - Dynamic robust `unified` station and train search
-- RESTful API endpoints
+- RESTful API endpoints (responses now include optional `coach_order`, `coach_classes` and `all_coaches` fields)
 
 ## Quick Start
 
@@ -106,7 +106,7 @@ Or use the code itself to change UI/UX strings and tokens.
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /api/train/:number` | Get train details |
+| `GET /api/train/:number` | Get train details (JSON may contain `coach_order`, `coach_classes`, `all_coaches`, `composition_html`, etc.) |
 | `GET /api/search/trains` | Search trains by route |
 | `GET /api/stations` | List all stations |
 | `GET /station/:id/departures/current` | Current departures |

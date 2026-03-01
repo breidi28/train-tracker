@@ -1,14 +1,16 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, memo } from 'react';
 import {
   View, Text, ScrollView, ActivityIndicator,
-  TouchableOpacity, RefreshControl, FlatList, Share
+  TouchableOpacity, RefreshControl, FlatList, Share, Platform
 } from 'react-native';
-import { useLocalSearchParams, Stack, Link } from 'expo-router';
+import WebDetailWrapper from '../../src/WebDetailWrapper';
+import { useLocalSearchParams, Stack, Link, useRouter } from 'expo-router';
 import { fetchStationTimetable } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getFavoriteStations, toggleFavoriteStation } from '../../src/storage';
+import { categoryColor } from '../../src/trainColors';
 
 
 interface TimetableItem {
@@ -24,6 +26,8 @@ interface TimetableItem {
   operator?: string;
   mentions?: string;
   data_source?: string;
+  arrival_timestamp?: string;
+  departure_timestamp?: string;
 }
 
 type Tab = 'departures' | 'arrivals';
@@ -40,24 +44,132 @@ function delayColor(min: number | null | undefined, dark: boolean) {
 }
 
 const RANK_COLORS: Record<string, string> = {
-  IC: '#008000', IR: '#f00', IRN: '#f00', R: '#000', 'R-E': '#000',
+  IC: '#15803D', ICN: '#166534',
+  IR: '#B91C1C', IRN: '#991B1B',
+  R: '#1D4ED8', 'R-E': '#4338CA', RE: '#4338CA',
 };
 function rankBadge(rank?: string): string {
   return RANK_COLORS[rank?.toUpperCase() ?? ''] ?? '#4B5563';
 }
 
-function isTimePast(timeStr: string | undefined): boolean {
-  if (!timeStr) return false;
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  return hours * 60 + minutes < currentMinutes;
+function formatTrainId(trainId: string | undefined): string {
+  if (!trainId) return '—';
+  // If it already has a space, return as is
+  if (trainId.includes(' ')) return trainId;
+  // Otherwise, insert space between rank and numbers (e.g. IR1575 -> IR 1575)
+  return trainId.replace(/^([a-zA-Z-]+)(\d+)$/, '$1 $2');
 }
 
+function isTimePast(timestamp: string | undefined): boolean {
+  if (!timestamp) return false;
+  const now = new Date();
+  const trainTime = new Date(timestamp);
+  return trainTime < now;
+}
+
+const TrainCard = memo(({ item, tab, dark, headTxt, subTxt, t, isCurrent, onPress }: {
+  item: TimetableItem;
+  tab: Tab;
+  dark: boolean;
+  headTxt: string;
+  subTxt: string;
+  t: any;
+  isCurrent: boolean;
+  onPress: (id: string) => void;
+}) => {
+  const rawId = item.train_id ?? item.train_number ?? '—';
+  const trainLabel = formatTrainId(rawId);
+  const rank = item.rank ?? rawId.split(/[\s\d]/)[0] ?? '';
+  const time = tab === 'departures' ? item.departure_time : item.arrival_time;
+  const ts = tab === 'departures' ? item.departure_timestamp : item.arrival_timestamp;
+  const delay = item.delay ?? 0;
+  const isPast = isTimePast(ts);
+
+  // Use train_number (which has the space, e.g. "IC 534") for navigation.
+  // Falling back to rawId only if train_number isn't separately available.
+  const navId = item.train_number ?? rawId;
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={() => onPress(navId)}
+      className={`mx-4 my-1.5 rounded-2xl border overflow-hidden`}
+      style={{
+        opacity: isPast ? 0.5 : 1,
+        borderColor: isCurrent ? '#0066CC' : (dark ? '#1F2937' : '#F3F4F6'),
+        borderWidth: isCurrent ? 1.5 : 1,
+        backgroundColor: isCurrent ? (dark ? '#0F172A' : '#F0F7FF') : (dark ? '#111827' : '#FFFFFF'),
+        minHeight: 100
+      }}
+    >
+      {isCurrent && (
+        <View className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r" />
+      )}
+
+      {/* Departed badge */}
+      {isPast && (
+        <View style={{
+          position: 'absolute', top: 8, right: 8,
+          backgroundColor: dark ? '#374151' : '#F3F4F6',
+          borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2,
+        }}>
+          <Text style={{ fontSize: 9, fontWeight: '700', color: dark ? '#9CA3AF' : '#6B7280', letterSpacing: 0.5 }}>
+            PLECAT
+          </Text>
+        </View>
+      )}
+
+      <View className="px-4 py-4">
+        <View className="flex-row items-center">
+          <View className="rounded px-2.5 py-1 mr-3" style={{ backgroundColor: rankBadge(rank) }}>
+            <Text className="text-white font-bold text-xs">{rank || '?'}</Text>
+          </View>
+          <View className="flex-1">
+            <Text className={`text-base font-semibold ${headTxt}`}>{trainLabel}</Text>
+            <Text className={`text-xs mt-0.5 ${subTxt}`} numberOfLines={1}>
+              {tab === 'departures' ? `${t('station.to')} ${item.destination ?? '—'}` : `${t('station.from')} ${item.origin ?? '—'}`}
+            </Text>
+          </View>
+          <View className="items-end ml-2">
+            <Text className={`text-lg font-semibold ${headTxt}`}>{time || '—'}</Text>
+            {delay !== 0 ? (
+              <View className="flex-row items-center gap-1">
+                <Text className="text-xs font-bold" style={{ color: delayColor(delay, dark) }}>{formatDelay(delay)}</Text>
+                {item.data_source === 'iris_live' && delay > 0 && (
+                  <View className="bg-red-500 rounded-full px-1.5 py-0.5"><Text className="text-white text-[9px] font-bold">LIVE</Text></View>
+                )}
+              </View>
+            ) : (
+              <View className="flex-row items-center gap-1">
+                <Text className="text-xs" style={{ color: delayColor(0, dark) }}>{t('station.onTime')}</Text>
+                {item.data_source === 'iris_live' && (
+                  <View className="bg-green-500 rounded-full px-1.5 py-0.5"><Text className="text-white text-[9px] font-bold">LIVE</Text></View>
+                )}
+              </View>
+            )}
+          </View>
+        </View>
+        {(item.platform || item.operator || item.mentions) && (
+          <View className="flex-row mt-2.5 items-center">
+            {item.platform && (
+              <View className="rounded px-2 py-0.5 mr-2" style={{ backgroundColor: dark ? '#1F2937' : '#F3F4F6' }}>
+                <Text className={`text-xs font-medium ${subTxt}`}>{t('station.platformLabel', { platform: item.platform })}</Text>
+              </View>
+            )}
+            {item.operator && <Text className={`text-xs ${subTxt}`}>{item.operator}</Text>}
+            {item.mentions && <Text className="text-xs text-yellow-500 ml-auto italic" numberOfLines={1}>{item.mentions}</Text>}
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+});
+
 export default function StationDetailScreen() {
+  const router = useRouter();
   const { id, name } = useLocalSearchParams<{ id: string; name?: string }>();
   const { dark } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [tab, setTab] = useState<Tab>('departures');
   const [showRetro, setShowRetro] = useState(false);
@@ -67,15 +179,31 @@ export default function StationDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isDateExpanded, setIsDateExpanded] = useState(false);
+
+  const dateOptions = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+
+  const formatDateForApi = (date: Date) => {
+    const d = date.getDate().toString().padStart(2, '0');
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}.${m}.${y}`;
+  };
 
   const flatListRef = useRef<FlatList>(null);
 
-  const stationId = Number(id);
+  const stationName = name ?? id;
 
   const load = async () => {
     try {
+      const apiDate = formatDateForApi(selectedDate);
       setError('');
-      const data = await fetchStationTimetable(stationId);
+      const data = await fetchStationTimetable(stationName, apiDate);
 
       const deps = data.filter((item: any) => item.is_origin || (item.is_stop && item.departure_time));
       const arrs = data.filter((item: any) => item.is_destination || (item.is_stop && item.arrival_time));
@@ -93,17 +221,14 @@ export default function StationDetailScreen() {
   useEffect(() => {
     load();
     getFavoriteStations().then(favs => {
-      setIsFavorite(!!favs.find(f => f.id === String(stationId)));
+      setIsFavorite(!!favs.find(f => f.id === id));
     });
-  }, [id]);
+  }, [id, selectedDate]);
 
   const onRefresh = () => { setRefreshing(true); load(); };
 
   const handleToggleFavorite = async () => {
-    const isNowFav = await toggleFavoriteStation({
-      id: String(stationId),
-      label: name ?? t('station.stationTitle', { id }),
-    });
+    const isNowFav = await toggleFavoriteStation({ id, label: name ?? t('station.stationTitle', { id }) });
     setIsFavorite(isNowFav);
   };
 
@@ -119,8 +244,8 @@ export default function StationDetailScreen() {
 
   // Find the index of the first upcoming train
   const upcomingIndex = data.findIndex(item => {
-    const time = tab === 'departures' ? item.departure_time : item.arrival_time;
-    return !isTimePast(time);
+    const ts = tab === 'departures' ? item.departure_timestamp : item.arrival_timestamp;
+    return !isTimePast(ts);
   });
   const targetIndex = upcomingIndex === -1 ? Math.max(0, data.length - 1) : Math.max(0, upcomingIndex - 1);
 
@@ -169,7 +294,7 @@ export default function StationDetailScreen() {
   }
 
   return (
-    <>
+    <WebDetailWrapper>
       <Stack.Screen
         options={{
           title: name ?? t('station.stationTitle', { id }),
@@ -185,6 +310,20 @@ export default function StationDetailScreen() {
           )
         }}
       />
+      {/* Web-only back button + page title bar */}
+      {Platform.OS === 'web' && (
+        <View style={{ backgroundColor: '#0066CC', paddingVertical: 12, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} style={{ marginRight: 12, flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="arrow-back" size={20} color="#fff" />
+          </TouchableOpacity>
+          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 17, flex: 1 }} numberOfLines={1}>
+            {name ?? t('station.stationTitle', { id })}
+          </Text>
+          <TouchableOpacity onPress={handleToggleFavorite} activeOpacity={0.7} style={{ marginLeft: 12 }}>
+            <Ionicons name={isFavorite ? 'star' : 'star-outline'} size={20} color={isFavorite ? '#F59E0B' : '#fff'} />
+          </TouchableOpacity>
+        </View>
+      )}
       <View className={`flex-1 ${bg}`}>
 
         {/* ── Tab switcher ─────────────────────────────────────────────── */}
@@ -218,8 +357,61 @@ export default function StationDetailScreen() {
           })}
         </View>
 
+        {/* ── Date Selector ───────────────────────────────────────────── */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setIsDateExpanded(!isDateExpanded)}
+          className={`mx-4 mt-2 px-4 py-3 rounded-xl flex-row items-center border ${dark ? 'bg-[#111827] border-gray-800' : 'bg-white border-gray-100 shadow-sm'}`}
+        >
+          <View className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${dark ? 'bg-blue-900/30' : 'bg-blue-50'}`}>
+            <Ionicons name="calendar-outline" size={18} color="#0066CC" />
+          </View>
+          <View className="flex-1">
+            <Text className={`text-xs ${subTxt}`}>{t('station.selectDate')}</Text>
+            <Text className={`text-sm font-bold ${headTxt}`}>
+              {selectedDate.toDateString() === new Date().toDateString() ? t('common.today') : selectedDate.toDateString() === new Date(new Date().setDate(new Date().getDate() + 1)).toDateString() ? t('common.tomorrow') : selectedDate.toLocaleDateString(i18n.language || 'ro-RO', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </Text>
+          </View>
+          <Ionicons name={isDateExpanded ? "chevron-up" : "chevron-down"} size={20} color={dark ? '#4B5563' : '#9CA3AF'} />
+        </TouchableOpacity>
+
+        {isDateExpanded && (
+          <View className="mb-1 mt-1">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-2 px-2">
+              {dateOptions.map((date, idx) => {
+                const isSelected = date.toDateString() === selectedDate.toDateString();
+                const dayName = date.toLocaleDateString(i18n.language || 'ro-RO', { weekday: 'short' });
+                const dayNum = date.getDate();
+                const monthName = date.toLocaleDateString(i18n.language || 'ro-RO', { month: 'short' });
+
+                return (
+                  <TouchableOpacity
+                    key={idx}
+                    onPress={() => {
+                      setSelectedDate(date);
+                      setIsDateExpanded(false);
+                    }}
+                    activeOpacity={0.7}
+                    className={`mx-1.5 px-3 py-2 rounded-2xl items-center border min-w-[70px] ${isSelected
+                      ? 'bg-primary border-primary shadow-blue-500/20 shadow-md'
+                      : dark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'
+                      }`}
+                  >
+                    <Text className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                      {idx === 0 ? t('common.today') : idx === 1 ? t('common.tomorrow') : dayName}
+                    </Text>
+                    <Text className={`text-sm font-bold ${isSelected ? 'text-white' : headTxt}`}>
+                      {dayNum} {monthName}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
         {/* ── Mode bar (retro toggle) ───────────────────────────────── */}
-        <View className={`flex-row justify-between items-center px-4 py-2 border-b ${modBar}`}>
+        <View className={`flex-row justify-between items-center px-4 py-2 mt-4 border-b ${modBar}`}>
           <Text className={`text-xs font-bold tracking-widest uppercase ${subTxt}`}>
             {tab === 'departures' ? t('station.departureTable') : t('station.arrivalTable')}
           </Text>
@@ -246,18 +438,18 @@ export default function StationDetailScreen() {
             ref={flatListRef}
             data={data}
             className="flex-1"
-            initialNumToRender={15}
+            initialNumToRender={10}
             maxToRenderPerBatch={10}
-            windowSize={5}
+            windowSize={7}
             removeClippedSubviews={true}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066CC']} />
             }
-            contentContainerStyle={{ paddingBottom: 32 }}
+            contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
             keyExtractor={(item, index) => `${item.train_id ?? item.train_number ?? '—'}-${index}`}
             getItemLayout={(data, index) => ({
-              length: 85, // estimated item height
-              offset: 85 * index,
+              length: 110, // estimated item height
+              offset: 110 * index,
               index,
             })}
             onScrollToIndexFailed={(info) => {
@@ -278,75 +470,25 @@ export default function StationDetailScreen() {
                 </Text>
               </View>
             }
-            renderItem={({ item, index }) => {
-              const trainLabel = item.train_id ?? item.train_number ?? '—';
-              const rank = item.rank ?? trainLabel.split(/[\s\d]/)[0] ?? '';
-              const time = tab === 'departures' ? item.departure_time : item.arrival_time;
-              const delay = item.delay ?? 0;
-              const isPast = isTimePast(time);
-
-              return (
-                <View>
-                  <Link
-                    href={{ pathname: '/train/[id]', params: { id: trainLabel.replace(/\s/g, '') } }}
-                    asChild
-                  >
-                    <TouchableOpacity
-                      className={`border-b px-4 py-4 ${rowBg} ${divider}`}
-                      activeOpacity={0.6}
-                      style={{ opacity: isPast ? 0.45 : 1 }}
-                    >
-                      <View className="flex-row items-center">
-                        <View className="rounded px-2.5 py-1 mr-3" style={{ backgroundColor: rankBadge(rank) }}>
-                          <Text className="text-white font-bold text-xs">{rank || '?'}</Text>
-                        </View>
-                        <View className="flex-1">
-                          <Text className={`text-base font-semibold ${headTxt}`}>{trainLabel}</Text>
-                          <Text className={`text-xs mt-0.5 ${subTxt}`} numberOfLines={1}>
-                            {tab === 'departures' ? `${t('station.to')} ${item.destination ?? '—'}` : `${t('station.from')} ${item.origin ?? '—'}`}
-                          </Text>
-                        </View>
-                        <View className="items-end ml-2">
-                          <Text className={`text-lg font-semibold ${headTxt}`}>{time || '—'}</Text>
-                          {delay !== 0 ? (
-                            <View className="flex-row items-center gap-1">
-                              <Text className="text-xs font-bold" style={{ color: delayColor(delay, dark) }}>{formatDelay(delay)}</Text>
-                              {item.data_source === 'iris_live' && delay > 0 && (
-                                <View className="bg-red-500 rounded-full px-1.5 py-0.5"><Text className="text-white text-[9px] font-bold">LIVE</Text></View>
-                              )}
-                            </View>
-                          ) : (
-                            <View className="flex-row items-center gap-1">
-                              <Text className="text-xs" style={{ color: delayColor(0, dark) }}>{t('station.onTime')}</Text>
-                              {item.data_source === 'iris_live' && (
-                                <View className="bg-green-500 rounded-full px-1.5 py-0.5"><Text className="text-white text-[9px] font-bold">LIVE</Text></View>
-                              )}
-                            </View>
-                          )}
-                        </View>
-                      </View>
-                      {(item.platform || item.operator || item.mentions) && (
-                        <View className="flex-row mt-2.5 items-center">
-                          {item.platform && (
-                            <View className="rounded px-2 py-0.5 mr-2" style={{ backgroundColor: dark ? '#1F2937' : '#F3F4F6' }}>
-                              <Text className={`text-xs font-medium ${subTxt}`}>{t('station.platformLabel', { platform: item.platform })}</Text>
-                            </View>
-                          )}
-                          {item.operator && <Text className={`text-xs ${subTxt}`}>{item.operator}</Text>}
-                          {item.mentions && <Text className="text-xs text-yellow-500 ml-auto italic" numberOfLines={1}>{item.mentions}</Text>}
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  </Link>
-                </View>
-              );
-            }}
+            renderItem={({ item, index }) => (
+              <TrainCard
+                item={item}
+                tab={tab}
+                dark={dark}
+                headTxt={headTxt}
+                subTxt={subTxt}
+                t={t}
+                isCurrent={index === upcomingIndex}
+                onPress={(trainId) => router.push({ pathname: '/train/[id]', params: { id: trainId } })}
+              />
+            )}
           />
         ) : (
           <ScrollView
             className="flex-1"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0066CC']} />}
           >
+            <View style={{ height: 8 }} />
             {data.length === 0 ? (
               <View className="items-center mt-20">
                 <Ionicons name={tab === 'departures' ? 'arrow-up-circle-outline' : 'arrow-down-circle-outline'} size={64} color={dark ? '#374151' : '#D1D5DB'} />
@@ -361,14 +503,14 @@ export default function StationDetailScreen() {
                   <Text style={styles.retroHeader} className="w-14 text-right">{t('station.retroDelay')}</Text>
                   <Text style={styles.retroHeader} className="w-8 text-right ml-1">{t('station.retroPlatform')}</Text>
                 </View>
-                {data.filter(d => !isTimePast(tab === 'departures' ? d.departure_time : d.arrival_time)).slice(0, 18).map((item, i) => {
+                {data.filter(d => !isTimePast(tab === 'departures' ? d.departure_timestamp : d.arrival_timestamp)).slice(0, 18).map((item, i) => {
                   const trainLabel = item.train_id ?? item.train_number ?? '—';
                   const time = tab === 'departures' ? item.departure_time : item.arrival_time;
                   const dest = tab === 'departures' ? item.destination : item.origin;
                   const delay = item.delay ?? 0;
                   return (
                     <View key={i} className="flex-row px-3 py-2 items-center" style={{ borderBottomWidth: 1, borderBottomColor: '#1C1C1E' }}>
-                      <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="w-14 flex-shrink-0" numberOfLines={1}>{trainLabel.replace(' ', '')}</Text>
+                      <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="w-14 flex-shrink-0" numberOfLines={1}>{item.train_number ?? trainLabel}</Text>
                       <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="flex-1" numberOfLines={1}>{dest?.toUpperCase() ?? t('station.unknown')}</Text>
                       <Text style={[styles.retroCell, { color: '#FCD34D' }]} className="w-12 text-right">{time}</Text>
                       <Text style={[styles.retroCell, { color: delay > 0 ? '#EF4444' : '#4ADE80' }]} className="w-14 text-right">{delay > 0 ? `+${delay}` : t('station.onTimShort')}</Text>
@@ -393,8 +535,8 @@ export default function StationDetailScreen() {
             <Ionicons name="time" size={26} color="#ffffff" />
           </TouchableOpacity>
         )}
-      </View>
-    </>
+      </View >
+    </WebDetailWrapper>
   );
 }
 

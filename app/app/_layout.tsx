@@ -1,7 +1,16 @@
 import "../global.css";
 import { useEffect, useRef, useState } from 'react';
-import { AppState, AppStateStatus, View, ActivityIndicator } from 'react-native';
+import { AppState, AppStateStatus, Platform, View, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
+
+// Web-only styles (pseudo-elements, -webkit-*, ::selection, @media hover)
+// These MUST NOT be processed by NativeWind on native, so we import them
+// conditionally. Metro's dead-code elimination ensures they're excluded from
+// the native bundle.
+if (Platform.OS === 'web') {
+  require('../global.web.css');
+}
+
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { I18nextProvider } from 'react-i18next';
@@ -14,15 +23,17 @@ function AppShell() {
   const appState = useRef<AppStateStatus>(AppState.currentState);
 
   useEffect(() => {
-    setupNotificationChannel();
-    pollWatchedTrains();
-    // Catch BackgroundFetch info.plist error in Expo Go
-    registerBackgroundFetchAsync().catch((err) => {
-      console.warn("Background fetch registration failed (expected in Expo Go iOS):", err.message);
-    });
+    if (Platform.OS !== 'web') {
+      setupNotificationChannel();
+      pollWatchedTrains();
+      registerBackgroundFetchAsync().catch((err) => {
+        console.warn("Background fetch registration failed (expected in Expo Go iOS):", err.message);
+      });
+    }
   }, []);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
     const sub = AppState.addEventListener('change', (next) => {
       if (appState.current.match(/inactive|background/) && next === 'active') {
         pollWatchedTrains();
@@ -31,6 +42,13 @@ function AppShell() {
     });
     return () => sub.remove();
   }, []);
+
+  // On web we suppress the Stack header for detail screens and let the
+  // WebLayout sidebar stay visible.  The Tabs group already wraps itself
+  // in WebLayout via its own _layout.tsx.
+  const webDetailScreenOptions = {
+    headerShown: false,
+  };
 
   return (
     <>
@@ -43,8 +61,14 @@ function AppShell() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Acasă' }} />
-        <Stack.Screen name="train/[id]" options={{ title: 'Detalii Tren', headerBackTitle: 'Acasă' }} />
-        <Stack.Screen name="station/[id]" options={{ title: 'Orar Stație', headerBackTitle: 'Acasă' }} />
+        <Stack.Screen
+          name="train/[id]"
+          options={Platform.OS === 'web' ? webDetailScreenOptions : { title: 'Detalii Tren', headerBackTitle: 'Acasă' }}
+        />
+        <Stack.Screen
+          name="station/[id]"
+          options={Platform.OS === 'web' ? webDetailScreenOptions : { title: 'Orar Stație', headerBackTitle: 'Acasă' }}
+        />
       </Stack>
     </>
   );

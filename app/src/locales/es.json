@@ -19,7 +19,9 @@
         "arr": "Lleg",
         "dep": "Sal",
         "next": "SIGUIENTE",
-        "noData": "Sin datos disponibles"
+        "noData": "Sin datos disponibles",
+        "today": "Hoy",
+        "tomorrow": "Mañana"
     },
     "home": {
         "searchTrain": "BUSCAR TREN",
@@ -75,6 +77,8 @@
         "reportTime": "Ahora",
         "addedAt": "Añadido: {{date}}",
         "facilities": "INSTALACIONES Y COMPOSICIÓN",
+        "coachOrder": "Orden de vagones por estación",
+        "selectStation": "Seleccionar estación",
         "locomotive": "Locomotora: {{class}}",
         "maxSpeed": "Velocidad máxima: {{speed}}",
         "car": "Coche {{position}}",

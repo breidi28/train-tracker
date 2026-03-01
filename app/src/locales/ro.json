@@ -19,7 +19,9 @@
         "arr": "Sos",
         "dep": "Pl",
         "next": "URMEAZĂ",
-        "noData": "Nu sunt date disponibile"
+        "noData": "Nu sunt date disponibile",
+        "today": "Astăzi",
+        "tomorrow": "Mâine"
     },
     "home": {
         "searchTrain": "CAUTĂ TREN",
@@ -75,6 +77,8 @@
         "reportTime": "Acum",
         "addedAt": "Adăugat: {{date}}",
         "facilities": "FACILITĂȚI & GARNITURĂ",
+        "coachOrder": "Ordinea vagoanelor per stație",
+        "selectStation": "Selectează stație",
         "locomotive": "Locomotivă: {{class}}",
         "maxSpeed": "Viteză maximă: {{speed}}",
         "car": "Vagon {{position}}",
@@ -103,7 +107,8 @@
         "retroPlatform": "LINIA",
         "onTimShort": "LA TMP",
         "unknown": "NECUNOSCUT",
-        "searchPlaceholder": "Caută o stație..."
+        "searchPlaceholder": "Caută o stație...",
+        "selectDate": "Selectează data"
     },
     "search": {
         "title": "Căutare",

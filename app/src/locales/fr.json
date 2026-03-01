@@ -19,7 +19,9 @@
         "arr": "Arr",
         "dep": "Dép",
         "next": "SUIVANT",
-        "noData": "Aucune donnée disponible"
+        "noData": "Aucune donnée disponible",
+        "today": "Aujourd'hui",
+        "tomorrow": "Demain"
     },
     "home": {
         "searchTrain": "RECHERCHER UN TRAIN",
@@ -75,6 +77,8 @@
         "reportTime": "Maintenant",
         "addedAt": "Ajouté le : {{date}}",
         "facilities": "ÉQUIPEMENTS ET COMPOSITION",
+        "coachOrder": "Ordre des voitures par gare",
+        "selectStation": "Sélectionnez la gare",
         "locomotive": "Locomotive : {{class}}",
         "maxSpeed": "Vitesse max : {{speed}}",
         "car": "Voiture {{position}}",

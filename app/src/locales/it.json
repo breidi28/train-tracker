@@ -19,7 +19,9 @@
         "arr": "Arr",
         "dep": "Part",
         "next": "PROSSIMO",
-        "noData": "Nessun dato disponibile"
+        "noData": "Nessun dato disponibile",
+        "today": "Oggi",
+        "tomorrow": "Domani"
     },
     "home": {
         "searchTrain": "CERCA TRENO",
@@ -75,6 +77,8 @@
         "reportTime": "Ora",
         "addedAt": "Aggiunto: {{date}}",
         "facilities": "SERVIZI E COMPOSIZIONE",
+        "coachOrder": "Ordine dei vagoni per stazione",
+        "selectStation": "Seleziona stazione",
         "locomotive": "Locomotiva: {{class}}",
         "maxSpeed": "Velocità massima: {{speed}}",
         "car": "Carrozza {{position}}",

@@ -1,6 +1,6 @@
 import sys
 sys.path.append(r"C:\Users\vladb\Desktop\proiecte\train-tracker\backend\cfr-iris-scraper")
-from src.TrainPageGetter import get_real_train_data
+from src.TrainPageGetter import get_train
 import time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -10,10 +10,22 @@ start = time.time()
 
 def fetch(t):
     try:
-        res = get_real_train_data(t)
-        return t, res.get('delay', 0) if res else 0
+        res = get_train(t)
+        # show a couple of useful fields
+        delay = None
+        if res:
+            # take delay of last station
+            delay = res.get('stations_data', [{}])[-1].get('delay')
+        # also print coach_classes and station_options if available
+        extra = {}
+        if res:
+            if res.get('coach_classes'):
+                extra['classes'] = res['coach_classes']
+            if res.get('station_options'):
+                extra['stations'] = res['station_options'][:3]  # show first few
+        return t, delay, res.get('services') if res else None, extra
     except Exception as e:
-        return t, str(e)
+        return t, str(e), None
         
 with ThreadPoolExecutor(max_workers=5) as ex:
     results = list(ex.map(fetch, trains))

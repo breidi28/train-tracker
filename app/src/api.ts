@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 
 // ── Set this to your Render URL once deployed ────────────────────────────────
 // Leave empty ('') to use the local dev server auto-detection below.
-const RENDER_API_URL = 'https://cfr-iris-scraper.onrender.com';
+const RENDER_API_URL = ""; // "https://cfr-iris-scraper.onrender.com"
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Auto-detect backend URL in local dev:
@@ -65,8 +65,10 @@ export async function searchStations(query: string) {
   return Array.isArray(data) ? data : [];
 }
 
-export async function fetchStationTimetable(stationId: number) {
-  const { data } = await api.get(`/station/${stationId}`);
+export async function fetchStationTimetable(stationId: string | number, date?: string) {
+  const params: Record<string, string> = {};
+  if (date) params.date = date;
+  const { data } = await api.get(`/station/${stationId}`, { params });
   return data;
 }
 

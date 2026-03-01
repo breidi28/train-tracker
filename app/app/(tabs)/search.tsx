@@ -8,14 +8,7 @@ import { searchTrains, searchStations } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
 import { useTranslation } from 'react-i18next';
-
-const CATEGORY_COLORS: Record<string, string> = {
-  IC: '#008000', IR: '#f00', IRN: '#f00', R: '#000', 'R-E': '#000',
-};
-function categoryColor(trainNumber: string) {
-  const p = trainNumber.split(/[\s\d]/)[0]?.toUpperCase() ?? '';
-  return CATEGORY_COLORS[p] ?? '#4B5563';
-}
+import { categoryColor } from '../../src/trainColors';
 
 export interface UnifiedResult {
   type: 'train' | 'station';
@@ -45,57 +38,62 @@ export default function SearchScreen() {
 
   // Debounced autocomplete
   useEffect(() => {
+    const q = query.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+    if (q.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Bare numbers trigger a live Infofer lookup → give more debounce time
+    const isPureNumber = /^\d+$/.test(q);
+    const delay = isPureNumber ? 700 : 300;
+
     const timer = setTimeout(async () => {
-      const q = query.replace(/[^a-zA-Z0-9\s]/g, '').trim();
       const cacheKey = q.toLowerCase();
 
-      if (q.length >= 2) {
-        if (queryCache[cacheKey]) {
-          setSuggestions(queryCache[cacheKey]);
-          setShowSuggestions(true);
-          return;
-        }
+      if (queryCache[cacheKey]) {
+        setSuggestions(queryCache[cacheKey]);
+        setShowSuggestions(true);
+        return;
+      }
 
-        try {
-          const [trainData, stationData] = await Promise.all([
-            searchTrains(q).catch(() => ({ results: [] })),
-            searchStations(q).catch(() => [])
-          ]);
+      try {
+        const [trainData, stationData] = await Promise.all([
+          searchTrains(q).catch(() => ({ results: [] })),
+          searchStations(q).catch(() => [])
+        ]);
 
-          const unified: UnifiedResult[] = [
-            ...(trainData.results?.slice(0, 3) || []).map((tr: any) => ({
-              type: 'train' as const,
-              id: tr.train_number,
-              title: tr.train_number,
-              subtitle: tr.route,
-              category: tr.category,
-              departure_time: tr.departure_time,
-              arrival_time: tr.arrival_time,
-            })),
-            ...(stationData?.slice(0, 3) || []).map((st: any) => ({
-              type: 'station' as const,
-              id: String(st.station_id),
-              title: st.name,
-              subtitle: st.region,
-            }))
-          ];
-          setSuggestions(unified);
-          queryCache[cacheKey] = unified;
-          setShowSuggestions(true);
-        } catch {
-          setSuggestions([]);
-          setShowSuggestions(false);
-        }
-      } else {
+        const unified: UnifiedResult[] = [
+          ...(trainData.results?.slice(0, 3) || []).map((tr: any) => ({
+            type: 'train' as const,
+            id: tr.train_number,
+            title: tr.train_number,
+            subtitle: tr.route,
+            category: tr.category,
+            departure_time: tr.departure_time,
+            arrival_time: tr.arrival_time,
+          })),
+          ...(stationData?.slice(0, 3) || []).map((st: any) => ({
+            type: 'station' as const,
+            id: String(st.station_id),
+            title: st.name,
+            subtitle: st.region,
+          }))
+        ];
+        setSuggestions(unified);
+        queryCache[cacheKey] = unified;
+        setShowSuggestions(unified.length > 0);
+      } catch {
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 300);
+    }, delay);
     return () => clearTimeout(timer);
   }, [query]);
 
   const handleSearch = async () => {
-    const q = query.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+    const q = query.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
     if (!q) return;
     setShowSuggestions(false);
     setLoading(true);

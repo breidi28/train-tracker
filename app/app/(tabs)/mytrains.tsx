@@ -10,15 +10,9 @@ import { getWatchedTrains, removeWatchedTrain, type WatchedTrain } from '../../s
 import { getRecentSearches, clearRecentSearches, getFavoriteTrains, getFavoriteStations, type RecentTrain, type FavoriteItem } from '../../src/storage';
 import { fetchTrain } from '../../src/api';
 import { useTheme } from '../../src/ThemeContext';
+import { categoryColor } from '../../src/trainColors';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const CATEGORY_COLORS: Record<string, string> = {
-    IC: '#008000', IR: '#f00', IRN: '#f00', R: '#000', 'R-E': '#000',
-};
-function categoryColor(trainNumber: string) {
-    const p = trainNumber.split(/[\s\d]/)[0]?.toUpperCase() ?? '';
-    return CATEGORY_COLORS[p] ?? '#4B5563';
-}
+// categoryColor is imported from shared trainColors module
 
 function delayColor(min: number): string {
     if (min === 0) return '#16A34A';
