@@ -165,51 +165,97 @@ export default function HomeScreen() {
             Infofer · CFR Călători · date în timp real
           </Text>
 
-          {/* Search row — stacks vertically on narrow screens */}
-          <View style={{ flexDirection: isMobileWeb ? 'column' : 'row', gap: 12, maxWidth: isMobileWeb ? undefined : 560 }}>
-            <TextInput
-              style={[{
-                flex: 1,
-                height: 52,
-                borderWidth: 1.5,
-                borderRadius: 6,
-                paddingHorizontal: 16,
-                fontSize: 16,
-                fontWeight: '600',
-              }, webInputBg] as any}
-              placeholder={t('home.placeholder')}
-              placeholderTextColor={dark ? '#4B5563' : '#94A3B8'}
-              value={trainNumber}
-              onChangeText={setTrainNumber}
-              autoCapitalize="characters"
-              returnKeyType="search"
-              onSubmitEditing={handleSearch}
-              onFocus={() => {
-                if (trainNumber.trim().length >= 2 && suggestions.length > 0) {
-                  setShowSuggestions(true);
-                }
-              }}
-            />
-            <TouchableOpacity
-              onPress={handleSearch}
-              activeOpacity={0.85}
-              style={{
-                backgroundColor: '#004C99',
-                borderRadius: 6,
-                paddingHorizontal: 24,
-                height: 52,
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexDirection: 'row',
-                gap: 8,
-              }}
-            >
-              <Ionicons name="search" size={18} color="#ffffff" />
-              <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 15 }}>
-                {t('home.searchTrain')}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {/* Search row */}
+          {isMobileWeb ? (
+            /* ── Mobile web: matches search tab style exactly ── */
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TextInput
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderWidth: 1,
+                  borderRadius: 12,
+                  paddingHorizontal: 16,
+                  fontSize: 16,
+                  backgroundColor: dark ? '#1F2937' : '#F9FAFB',
+                  borderColor: dark ? '#374151' : '#E5E7EB',
+                  color: dark ? '#F9FAFB' : '#111827',
+                } as any}
+                placeholder={t('home.placeholder')}
+                placeholderTextColor={dark ? '#6B7280' : '#9CA3AF'}
+                value={trainNumber}
+                onChangeText={setTrainNumber}
+                autoCapitalize="characters"
+                returnKeyType="search"
+                onSubmitEditing={handleSearch}
+                onFocus={() => {
+                  if (trainNumber.trim().length >= 2 && suggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
+              />
+              <TouchableOpacity
+                onPress={handleSearch}
+                activeOpacity={0.8}
+                style={{
+                  backgroundColor: '#0066CC',
+                  borderRadius: 12,
+                  width: 48,
+                  height: 48,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Ionicons name="search" size={20} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            /* ── Desktop: wide search bar + labelled button ── */
+            <View style={{ flexDirection: 'row', gap: 12, maxWidth: 560 }}>
+              <TextInput
+                style={[{
+                  flex: 1,
+                  height: 52,
+                  borderWidth: 1.5,
+                  borderRadius: 6,
+                  paddingHorizontal: 16,
+                  fontSize: 16,
+                  fontWeight: '600',
+                }, webInputBg] as any}
+                placeholder={t('home.placeholder')}
+                placeholderTextColor={dark ? '#4B5563' : '#94A3B8'}
+                value={trainNumber}
+                onChangeText={setTrainNumber}
+                autoCapitalize="characters"
+                returnKeyType="search"
+                onSubmitEditing={handleSearch}
+                onFocus={() => {
+                  if (trainNumber.trim().length >= 2 && suggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
+              />
+              <TouchableOpacity
+                onPress={handleSearch}
+                activeOpacity={0.85}
+                style={{
+                  backgroundColor: '#004C99',
+                  borderRadius: 6,
+                  paddingHorizontal: 24,
+                  height: 52,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="search" size={18} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontWeight: '700', fontSize: 15 }}>
+                  {t('home.searchTrain')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
           {error ? (
             <Text style={{ color: '#FECACA', marginTop: 8, fontSize: 13, fontWeight: '600' }}>{error}</Text>
           ) : null}
