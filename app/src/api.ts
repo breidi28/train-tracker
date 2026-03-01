@@ -1,13 +1,8 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 
-// ── Set this to your Render URL once deployed ────────────────────────────────
-// Leave empty ('') to use the local dev server auto-detection below.
-const RENDER_API_URL = "https://cfr-iris-scraper.onrender.com"; // "https://cfr-iris-scraper.onrender.com"
-// ─────────────────────────────────────────────────────────────────────────────
+const RENDER_API_URL = "https://cfr-iris-scraper.onrender.com";
 
-// Auto-detect backend URL in local dev:
-// On a real device, Expo's debuggerHost gives us the dev machine's IP
 function getBaseUrl(): string {
   if (RENDER_API_URL) return RENDER_API_URL;
   const debuggerHost = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoGo?.debuggerHost;
@@ -26,7 +21,6 @@ const api = axios.create({
 });
 
 // ── Train endpoints ──
-
 export async function fetchTrain(trainId: string, date?: string) {
   const params: Record<string, string> = {};
   if (date) params.date = date;
@@ -47,7 +41,6 @@ export async function fetchTrainComposition(trainId: string) {
 }
 
 // ── Station endpoints ──
-
 let cachedStations: any[] | null = null;
 
 export async function fetchStations() {
@@ -65,23 +58,23 @@ export async function searchStations(query: string) {
   return Array.isArray(data) ? data : [];
 }
 
-export async function fetchStationTimetable(stationId: string | number, date?: string) {
+// FIX: Use station name (not numeric ID) so the backend can build the correct
+// Infofer slug. The old numeric IDs were fake demo values that Infofer doesn't
+// recognise, causing "no train data found" locally.
+export async function fetchStationTimetable(stationName: string, date?: string) {
   const params: Record<string, string> = {};
   if (date) params.date = date;
-  const { data } = await api.get(`/station/${stationId}`, { params });
+  const { data } = await api.get(`/api/station-by-name/${encodeURIComponent(stationName)}`, { params });
   return data;
 }
 
-
 // ── Status ──
-
 export async function fetchApiStatus() {
   const { data } = await api.get('/api');
   return data;
 }
 
 // ── Reports ──
-
 export async function fetchTrainReports(trainId: string) {
   const { data } = await api.get(`/api/train/${encodeURIComponent(trainId)}/reports`);
   return data;
