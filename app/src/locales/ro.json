@@ -181,5 +181,20 @@
         "oprit_in_camp": "Oprit în câmp",
         "intarziat": "Întârziat",
         "altceva": "Altceva"
+    },
+    "errors": {
+        "serviceDownTitle": "Serviciu indisponibil",
+        "serviceDownBody": "Site-ul CFR / Infofer este momentan oprit sau în mentenanță. Te rugăm să încerci din nou în câteva minute.",
+        "timeoutTitle": "Cerere expirată",
+        "timeoutBody": "Serverul a întârziat prea mult să răspundă. Poate fi supraîncărcat — încearcă din nou în scurt timp.",
+        "notFoundTitle": "Negăsit",
+        "notFoundTrainBody": "Trenul nu a fost găsit pe tablourile live pentru astăzi. Este posibil să nu circuleze sau numărul să fie incorect.",
+        "notFoundStationBody": "Nu s-a găsit niciun orar pentru această stație astăzi.",
+        "networkTitle": "Fără conexiune",
+        "networkBody": "Nu se poate contacta serverul. Verifică conexiunea la internet și încearcă din nou.",
+        "serverErrorTitle": "Eroare neașteptată",
+        "serverErrorBody": "Ceva nu a funcționat corect pe server. Te rugăm să încerci din nou mai târziu.",
+        "retryLater": "Încearcă mai târziu",
+        "offlineBanner": "Se afișează date salvate — ești offline."
     }
 }

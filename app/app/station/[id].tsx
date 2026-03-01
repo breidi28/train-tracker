@@ -5,12 +5,13 @@ import {
 } from 'react-native';
 import WebDetailWrapper from '../../src/WebDetailWrapper';
 import { useLocalSearchParams, Stack, Link, useRouter } from 'expo-router';
-import { fetchStationTimetable } from '../../src/api';
+import { fetchStationTimetable, type ApiErrorCode } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { getFavoriteStations, toggleFavoriteStation } from '../../src/storage';
 import { categoryColor } from '../../src/trainColors';
+import ServiceError from '../../src/ServiceError';
 
 
 interface TimetableItem {
@@ -178,6 +179,7 @@ export default function StationDetailScreen() {
   const [arrivals, setArrivals] = useState<TimetableItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState<ApiErrorCode | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isDateExpanded, setIsDateExpanded] = useState(false);
@@ -203,6 +205,7 @@ export default function StationDetailScreen() {
     try {
       const apiDate = formatDateForApi(selectedDate);
       setError('');
+      setErrorCode(null);
       const data = await fetchStationTimetable(stationName, apiDate);
 
       const deps = data.filter((item: any) => item.is_origin || (item.is_stop && item.departure_time));
@@ -212,6 +215,7 @@ export default function StationDetailScreen() {
       setArrivals(arrs);
     } catch (e: any) {
       setError(e?.response?.data?.error ?? e.message ?? t('station.loadError'));
+      setErrorCode(e?.errorCode ?? e?.response?.data?.error_code ?? null);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -279,17 +283,13 @@ export default function StationDetailScreen() {
 
   if (error) {
     return (
-      <View className={`flex-1 justify-center items-center ${bg} px-6`}>
-        <Ionicons name="alert-circle" size={64} color="#EF4444" />
-        <Text className="text-red-500 text-base mt-3 text-center">{error}</Text>
-        <TouchableOpacity
-          className="bg-primary rounded-xl px-6 py-3 mt-4"
-          onPress={load}
-          activeOpacity={0.8}
-        >
-          <Text className="text-white font-bold">{t('common.retry')}</Text>
-        </TouchableOpacity>
-      </View>
+      <ServiceError
+        errorCode={errorCode}
+        rawMessage={error}
+        context="station"
+        dark={dark}
+        onRetry={load}
+      />
     );
   }
 

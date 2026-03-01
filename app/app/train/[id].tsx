@@ -9,11 +9,12 @@ import * as Location from 'expo-location';
 
 import { buildLeafletHtml } from '../../src/leafletMap';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import { fetchTrain, fetchTrainReports, fetchTrainComposition, submitTrainReport } from '../../src/api';
+import { fetchTrain, fetchTrainReports, fetchTrainComposition, submitTrainReport, type ApiErrorCode } from '../../src/api';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { categoryColor } from '../../src/trainColors';
+import ServiceError from '../../src/ServiceError';
 
 import {
   isTrainWatched, addWatchedTrain, removeWatchedTrain, requestNotificationPermission,
@@ -202,6 +203,7 @@ export default function TrainDetailScreen() {
   const [train, setTrain] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState<ApiErrorCode | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(0);
   const [showMap, setShowMap] = useState(false);
@@ -250,6 +252,7 @@ export default function TrainDetailScreen() {
   const load = async () => {
     hasScrolledRef.current = false; // reset so new data triggers auto-scroll
     stopYRef.current = {};
+    setErrorCode(null);
     try {
       const [data, reps, comp] = await Promise.all([
         fetchTrain(id ?? ''),
@@ -278,6 +281,7 @@ export default function TrainDetailScreen() {
       }
       const msg = e?.response?.data?.error ?? e.message ?? t('common.error');
       setError(msg);
+      setErrorCode(e?.errorCode ?? e?.response?.data?.error_code ?? null);
       if (e?.response?.data?.suggestions) setTrain({ suggestions: e.response.data.suggestions });
     } finally {
       setLoading(false);
@@ -498,15 +502,15 @@ export default function TrainDetailScreen() {
       </View>
     );
   }
-  if (error && !train?.suggestions) {
+  if (error && !train?.suggestions && !train?.isOffline) {
     return (
-      <View className={`flex-1 justify-center items-center ${bg} px-6`}>
-        <Ionicons name="alert-circle" size={64} color="#EF4444" />
-        <Text className="text-red-500 text-base mt-3 text-center">{error}</Text>
-        <TouchableOpacity className="bg-primary rounded-xl px-6 py-3 mt-4" onPress={load}>
-          <Text className="text-white font-semibold">{t('common.retry')}</Text>
-        </TouchableOpacity>
-      </View>
+      <ServiceError
+        errorCode={errorCode}
+        rawMessage={error}
+        context="train"
+        dark={dark}
+        onRetry={load}
+      />
     );
   }
   if (train?.suggestions) {
@@ -585,6 +589,16 @@ export default function TrainDetailScreen() {
               <Ionicons name="map-outline" size={22} color="#0066CC" />
             </TouchableOpacity>
           </View>
+
+          {/* Offline banner */}
+          {train?.isOffline && (
+            <View style={{ backgroundColor: '#78350F', flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, gap: 8 }}>
+              <Ionicons name="cloud-offline-outline" size={16} color="#FCD34D" />
+              <Text style={{ color: '#FCD34D', fontSize: 12, fontWeight: '600', flex: 1 }}>
+                {t('errors.offlineBanner')}
+              </Text>
+            </View>
+          )}
 
           {/* Watching strip */}
           {watching && (

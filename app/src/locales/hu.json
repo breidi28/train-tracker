@@ -179,5 +179,20 @@
         "oprit_in_camp": "Mezőn megállt",
         "intarziat": "Késik",
         "altceva": "Egyéb"
+    },
+    "errors": {
+        "serviceDownTitle": "A szolgáltatás nem elérhető",
+        "serviceDownBody": "A CFR / Infofer weboldal ideiglenesen leállt vagy karbantartás alatt van. Kérjük, próbálja újra néhány perc múlva.",
+        "timeoutTitle": "A kérés időtúllépést okozott",
+        "timeoutBody": "A szerver túl sokáig tartott a válasszal. Lehet, hogy túlterhelt — kérjük, próbálja újra hamarosan.",
+        "notFoundTitle": "Nem található",
+        "notFoundTrainBody": "Ez a vonat nem található a mai élő táblákon. Lehetséges, hogy nem közlekedik, vagy a szám helytelen.",
+        "notFoundStationBody": "Ma nem található menetrend ehhez az állomáshoz.",
+        "networkTitle": "Nincs kapcsolat",
+        "networkBody": "A szerver nem érhető el. Kérjük, ellenőrizze az internetkapcsolatát és próbálja újra.",
+        "serverErrorTitle": "Váratlan hiba",
+        "serverErrorBody": "Valami hiba történt a szerverünk oldalán. Kérjük, próbálja újra később.",
+        "retryLater": "Próbálja újra később",
+        "offlineBanner": "Mentett adatok megjelenítése — Ön offline."
     }
 }

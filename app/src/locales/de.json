@@ -179,5 +179,20 @@
         "oprit_in_camp": "Im Feld gestoppt",
         "intarziat": "Verspätet",
         "altceva": "Sonstiges"
+    },
+    "errors": {
+        "serviceDownTitle": "Dienst nicht verfügbar",
+        "serviceDownBody": "Die CFR / Infofer Website ist vorübergehend ausgefallen oder wird gewartet. Bitte in einigen Minuten erneut versuchen.",
+        "timeoutTitle": "Zeitüberschreitung",
+        "timeoutBody": "Der Server hat zu lange für eine Antwort gebraucht. Er könnte überlastet sein — bitte erneut versuchen.",
+        "notFoundTitle": "Nicht gefunden",
+        "notFoundTrainBody": "Dieser Zug wurde für heute nicht in den Live-Anzeigen gefunden. Er fährt möglicherweise nicht oder die Nummer ist falsch.",
+        "notFoundStationBody": "Für diesen Bahnhof wurde heute kein Fahrplan gefunden.",
+        "networkTitle": "Keine Verbindung",
+        "networkBody": "Der Server ist nicht erreichbar. Bitte Internetverbindung prüfen und erneut versuchen.",
+        "serverErrorTitle": "Unerwarteter Fehler",
+        "serverErrorBody": "Etwas ist auf unserer Seite schiefgelaufen. Bitte später erneut versuchen.",
+        "retryLater": "Später erneut versuchen",
+        "offlineBanner": "Zeige gespeicherte Daten — Sie sind offline."
     }
 }

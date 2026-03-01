@@ -179,5 +179,20 @@
         "oprit_in_camp": "Gestopt op open lijn",
         "intarziat": "Vertraagd",
         "altceva": "Anders"
+    },
+    "errors": {
+        "serviceDownTitle": "Service niet beschikbaar",
+        "serviceDownBody": "De CFR / Infofer website is tijdelijk offline of in onderhoud. Probeer het over een paar minuten opnieuw.",
+        "timeoutTitle": "Verzoek verlopen",
+        "timeoutBody": "De server reageerde te langzaam. Mogelijk is hij overbelast — probeer het snel opnieuw.",
+        "notFoundTitle": "Niet gevonden",
+        "notFoundTrainBody": "Deze trein is niet gevonden in de live-borden van vandaag. Mogelijk rijdt deze trein niet of is het nummer onjuist.",
+        "notFoundStationBody": "Geen dienstregeling gevonden voor dit station vandaag.",
+        "networkTitle": "Geen verbinding",
+        "networkBody": "De server is niet bereikbaar. Controleer uw internetverbinding en probeer het opnieuw.",
+        "serverErrorTitle": "Onverwachte fout",
+        "serverErrorBody": "Er is iets misgegaan aan onze kant. Probeer het later opnieuw.",
+        "retryLater": "Later opnieuw proberen",
+        "offlineBanner": "Opgeslagen gegevens worden weergegeven — u bent offline."
     }
 }

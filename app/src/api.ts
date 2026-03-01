@@ -15,10 +15,64 @@ function getBaseUrl(): string {
 
 export const API_BASE = getBaseUrl();
 
+// ── Typed API error ───────────────────────────────────────────────────────────
+export type ApiErrorCode =
+  | 'service_down'   // the CFR/Infofer site is unreachable (503)
+  | 'timeout'        // request timed out (504)
+  | 'not_found'      // train/station not found (404)
+  | 'server_error'   // unexpected backend error (500)
+  | 'network_error'  // no response at all (client offline / DNS)
+  | 'unknown';
+
+export class ApiError extends Error {
+  errorCode: ApiErrorCode;
+  userMessage: string;
+
+  constructor(message: string, errorCode: ApiErrorCode, userMessage: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.errorCode = errorCode;
+    this.userMessage = userMessage;
+  }
+}
+
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 60000,
 });
+
+// Intercept errors and promote structured error_code from backend JSON
+api.interceptors.response.use(
+  response => response,
+  error => {
+    const data = error?.response?.data;
+    const status = error?.response?.status;
+    let errorCode: ApiErrorCode = 'unknown';
+    let userMessage: string = data?.message ?? data?.error ?? error.message ?? 'Unknown error';
+
+    if (!error.response) {
+      // Network failure — no response received
+      errorCode = 'network_error';
+      userMessage = 'Unable to reach the server. Please check your internet connection.';
+    } else if (data?.error_code) {
+      errorCode = data.error_code as ApiErrorCode;
+    } else if (status === 503) {
+      errorCode = 'service_down';
+    } else if (status === 504) {
+      errorCode = 'timeout';
+    } else if (status === 404) {
+      errorCode = 'not_found';
+    } else if (status >= 500) {
+      errorCode = 'server_error';
+    }
+
+    const apiErr = new ApiError(data?.error ?? error.message, errorCode, userMessage);
+    // Preserve the original axios error fields for backward compatibility
+    (apiErr as any).response = error.response;
+    (apiErr as any).request = error.request;
+    return Promise.reject(apiErr);
+  }
+);
 
 // ── Train endpoints ──
 export async function fetchTrain(trainId: string, date?: string) {

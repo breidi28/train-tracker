@@ -179,5 +179,20 @@
         "oprit_in_camp": "Arrêté en rase campagne",
         "intarziat": "En retard",
         "altceva": "Autre"
+    },
+    "errors": {
+        "serviceDownTitle": "Service indisponible",
+        "serviceDownBody": "Le site CFR / Infofer est temporairement en panne ou en maintenance. Veuillez réessayer dans quelques minutes.",
+        "timeoutTitle": "Délai dépassé",
+        "timeoutBody": "Le serveur a mis trop de temps à répondre. Il est peut-être surchargé — veuillez réessayer bientôt.",
+        "notFoundTitle": "Non trouvé",
+        "notFoundTrainBody": "Ce train n'a pas été trouvé dans les tableaux en direct pour aujourd'hui. Il est possible qu'il ne circule pas ou que le numéro soit incorrect.",
+        "notFoundStationBody": "Aucun horaire trouvé pour cette gare aujourd'hui.",
+        "networkTitle": "Pas de connexion",
+        "networkBody": "Impossible de joindre le serveur. Veuillez vérifier votre connexion internet et réessayer.",
+        "serverErrorTitle": "Erreur inattendue",
+        "serverErrorBody": "Une erreur s'est produite de notre côté. Veuillez réessayer ultérieurement.",
+        "retryLater": "Réessayer plus tard",
+        "offlineBanner": "Affichage des données enregistrées — vous êtes hors ligne."
     }
 }

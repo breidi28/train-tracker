@@ -179,5 +179,20 @@
         "oprit_in_camp": "Fermo in aperta campagna",
         "intarziat": "In ritardo",
         "altceva": "Altro"
+    },
+    "errors": {
+        "serviceDownTitle": "Servizio non disponibile",
+        "serviceDownBody": "Il sito CFR / Infofer è temporaneamente fuori servizio o in manutenzione. Riprovare tra qualche minuto.",
+        "timeoutTitle": "Richiesta scaduta",
+        "timeoutBody": "Il server ha impiegato troppo tempo a rispondere. Potrebbe essere sovraccarico — riprovare a breve.",
+        "notFoundTitle": "Non trovato",
+        "notFoundTrainBody": "Questo treno non è stato trovato nelle tabelle live per oggi. Potrebbe non essere in servizio o il numero potrebbe essere errato.",
+        "notFoundStationBody": "Nessun orario trovato per questa stazione oggi.",
+        "networkTitle": "Nessuna connessione",
+        "networkBody": "Impossibile raggiungere il server. Verificare la connessione internet e riprovare.",
+        "serverErrorTitle": "Errore imprevisto",
+        "serverErrorBody": "Qualcosa è andato storto dal nostro lato. Riprovare più tardi.",
+        "retryLater": "Riprova più tardi",
+        "offlineBanner": "Visualizzazione dati salvati — sei offline."
     }
 }
