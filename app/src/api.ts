@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 
 // ── Set this to your Render URL once deployed ────────────────────────────────
 // Leave empty ('') to use the local dev server auto-detection below.
-const RENDER_API_URL = ""; // "https://cfr-iris-scraper.onrender.com"
+const RENDER_API_URL = "https://cfr-iris-scraper.onrender.com"; // "https://cfr-iris-scraper.onrender.com"
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Auto-detect backend URL in local dev:

@@ -1,17 +1,14 @@
 /**
- * WebLayout.tsx  —  NS-inspired desktop shell
+ * WebLayout.tsx  —  Responsive web shell
  *
- * Renders a desktop-optimised shell for the Expo web build:
- *   • Fixed top navigation bar (white, NS-style)
- *   • Full-width yellow hero strip below nav (for tab pages)
- *   • Centred content column (max 1100px)
- *   • Light grey page background  (#F2F2F2)
+ * • ≥ 768 px  →  sticky top nav bar (desktop/tablet experience)
+ * • <  768 px  →  bottom tab bar  (native-identical mobile experience)
  *
- * On mobile (iOS / Android) this component is never mounted —
- * the native bottom-tab layout is used instead.
+ * The breakpoint is detected with useWindowDimensions so it reacts live
+ * when the browser window is resized.
  */
 
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from './ThemeContext';
@@ -19,10 +16,13 @@ import { useTranslation } from 'react-i18next';
 
 // ─── Brand tokens ──────────────────────────────────────────────────────────
 const BRAND_BLUE = '#0066CC';
-const BRAND_ACCENT = '#0066CC';
-const BRAND_BG = '#F5F6F8';      // page background
+const BRAND_BG = '#F5F6F8';
 const BRAND_CARD = '#FFFFFF';
 const BRAND_BORDER = '#E4E4E4';
+
+const MOBILE_BP = 768;   // px — below this we switch to the mobile layout
+const TOPNAV_H = 60;
+const BOTNAV_H = 56;
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 interface NavItem {
@@ -35,13 +35,23 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
     { href: '/', labelKey: 'tabs.home', icon: 'home-outline', iconActive: 'home' },
     { href: '/search', labelKey: 'tabs.search', icon: 'search-outline', iconActive: 'search' },
-    { href: '/mytrains', labelKey: 'tabs.trains', icon: 'heart-outline', iconActive: 'heart' },
-    { href: '/stations', labelKey: 'tabs.stations', icon: 'train-outline', iconActive: 'train' },
+    { href: '/mytrains', labelKey: 'tabs.trains', icon: 'star-outline', iconActive: 'star' },
+    { href: '/stations', labelKey: 'tabs.stations', icon: 'location-outline', iconActive: 'location' },
     { href: '/settings', labelKey: 'tabs.settings', icon: 'settings-outline', iconActive: 'settings' },
 ];
 
-// ─── TopNav ───────────────────────────────────────────────────────────────────
+// ─── Active href helper ───────────────────────────────────────────────────────
+function useActiveHref(pathname: string): string {
+    return NAV_ITEMS
+        .slice()
+        .reverse()
+        .find(item =>
+            pathname === item.href ||
+            (item.href !== '/' && pathname.startsWith(item.href))
+        )?.href ?? '/';
+}
 
+// ─── Desktop top nav ──────────────────────────────────────────────────────────
 function TopNav({ activeHref }: { activeHref: string }) {
     const router = useRouter();
     const { dark } = useTheme();
@@ -54,7 +64,7 @@ function TopNav({ activeHref }: { activeHref: string }) {
 
     return (
         <View style={[styles.topNav, { backgroundColor: navBg, borderBottomColor: border }]}>
-            {/* Left: Logo */}
+            {/* Logo */}
             <TouchableOpacity
                 onPress={() => router.push('/' as any)}
                 activeOpacity={0.8}
@@ -69,7 +79,7 @@ function TopNav({ activeHref }: { activeHref: string }) {
                 </View>
             </TouchableOpacity>
 
-            {/* Centre/Right: Navigation links */}
+            {/* Nav links */}
             <View style={styles.navLinks}>
                 {NAV_ITEMS.map(item => {
                     const active = activeHref === item.href;
@@ -81,10 +91,7 @@ function TopNav({ activeHref }: { activeHref: string }) {
                             activeOpacity={0.75}
                             style={[
                                 styles.navLink,
-                                active && {
-                                    borderBottomColor: BRAND_ACCENT,
-                                    borderBottomWidth: 3,
-                                },
+                                active && { borderBottomColor: BRAND_BLUE, borderBottomWidth: 3 },
                             ]}
                         >
                             <Ionicons
@@ -104,29 +111,73 @@ function TopNav({ activeHref }: { activeHref: string }) {
     );
 }
 
-// ─── Main export ──────────────────────────────────────────────────────────────
+// ─── Mobile bottom tab bar ────────────────────────────────────────────────────
+function BottomTabBar({ activeHref }: { activeHref: string }) {
+    const router = useRouter();
+    const { dark } = useTheme();
+    const { t } = useTranslation();
 
+    const tabBg = dark ? '#111827' : '#ffffff';
+    const border = dark ? '#1F2937' : '#E5E7EB';
+    const active = BRAND_BLUE;
+    const inactive = dark ? '#6B7280' : '#9CA3AF';
+
+    return (
+        <View style={[styles.bottomTab, { backgroundColor: tabBg, borderTopColor: border }]}>
+            {NAV_ITEMS.map(item => {
+                const isActive = activeHref === item.href;
+                const color = isActive ? active : inactive;
+                return (
+                    <TouchableOpacity
+                        key={item.href}
+                        onPress={() => router.push(item.href as any)}
+                        activeOpacity={0.7}
+                        style={styles.bottomTabItem}
+                    >
+                        <Ionicons
+                            name={isActive ? item.iconActive : item.icon}
+                            size={22}
+                            color={color}
+                        />
+                        <Text style={[styles.bottomTabLabel, { color, fontWeight: isActive ? '700' : '500' }]}>
+                            {t(item.labelKey)}
+                        </Text>
+                    </TouchableOpacity>
+                );
+            })}
+        </View>
+    );
+}
+
+// ─── Main export ──────────────────────────────────────────────────────────────
 export default function WebLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { dark } = useTheme();
+    const { width } = useWindowDimensions();
+    const isMobile = width < MOBILE_BP;
 
     const pageBg = dark ? '#0D1117' : BRAND_BG;
+    const activeHref = useActiveHref(pathname);
 
-    // Active nav detection (longest match wins)
-    const activeHref = NAV_ITEMS
-        .slice()
-        .reverse()
-        .find(item =>
-            pathname === item.href ||
-            (item.href !== '/' && pathname.startsWith(item.href))
-        )?.href ?? '/';
+    if (isMobile) {
+        // ── Mobile web: no top bar, content fills full width, bottom tab bar ──
+        return (
+            <View style={[styles.shellMobile, { backgroundColor: pageBg }]}>
+                {/* Scrollable content area */}
+                <View style={styles.mobileContent}>
+                    {children}
+                </View>
 
+                {/* Bottom tab bar (matches native look exactly) */}
+                <BottomTabBar activeHref={activeHref} />
+            </View>
+        );
+    }
+
+    // ── Desktop web: sticky top nav + centred content column ──────────────────
     return (
         <View style={[styles.shell, { backgroundColor: pageBg }]}>
-            {/* ── Top navigation bar ──────────────────────────────────────── */}
             <TopNav activeHref={activeHref} />
-
-            {/* ── Page content centred at max 1100px ─────────────────────── */}
             <View style={styles.pageBody}>
                 <View style={styles.contentCol}>
                     {children}
@@ -137,35 +188,40 @@ export default function WebLayout({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-
-const TOPNAV_H = 60;
-
 const styles = StyleSheet.create({
+
+    // ── Desktop shell
     shell: {
         flex: 1,
         minHeight: '100vh' as any,
         flexDirection: 'column',
     },
+    pageBody: {
+        flex: 1,
+        alignItems: 'center',
+        paddingBottom: 40,
+        minHeight: `calc(100vh - ${TOPNAV_H}px)` as any,
+    },
+    contentCol: {
+        width: '100%' as any,
+        maxWidth: 1100,
+        flex: 1,
+    },
 
-    // ── Top nav
+    // ── Desktop top nav
     topNav: {
         height: TOPNAV_H,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 32,
         borderBottomWidth: 1,
-        // sticky
         position: 'sticky' as any,
         top: 0,
         zIndex: 100,
-        // subtle shadow
         ...Platform.select({
-            web: {
-                boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-            } as any,
+            web: { boxShadow: '0 1px 4px rgba(0,0,0,0.08)' } as any,
         }),
     },
-
     logoWrap: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -189,7 +245,6 @@ const styles = StyleSheet.create({
         fontSize: 10,
         marginTop: 1,
     },
-
     navLinks: {
         flexDirection: 'row',
         alignItems: 'stretch',
@@ -204,23 +259,45 @@ const styles = StyleSheet.create({
         height: TOPNAV_H,
         borderBottomWidth: 3,
         borderBottomColor: 'transparent',
-        // hover handled by CSS in global.css
     },
     navLinkText: {
         fontSize: 13,
     },
 
-    // ── Page body
-    pageBody: {
+    // ── Mobile shell
+    shellMobile: {
+        flex: 1,
+        minHeight: '100vh' as any,
+        flexDirection: 'column',
+    },
+    mobileContent: {
+        flex: 1,
+        // Content takes all space above the bottom nav
+        marginBottom: BOTNAV_H,
+    },
+
+    // ── Bottom tab bar (mirrors native _layout.tsx style)
+    bottomTab: {
+        height: BOTNAV_H,
+        flexDirection: 'row',
+        borderTopWidth: 1,
+        position: 'fixed' as any,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 100,
+        ...Platform.select({
+            web: { boxShadow: '0 -1px 6px rgba(0,0,0,0.06)' } as any,
+        }),
+    },
+    bottomTabItem: {
         flex: 1,
         alignItems: 'center',
-        paddingTop: 0,
-        paddingBottom: 40,
-        minHeight: `calc(100vh - ${TOPNAV_H}px)` as any,
+        justifyContent: 'center',
+        gap: 2,
     },
-    contentCol: {
-        width: '100%' as any,
-        maxWidth: 1100,
-        flex: 1,
+    bottomTabLabel: {
+        fontSize: 10,
+        marginTop: 2,
     },
 });

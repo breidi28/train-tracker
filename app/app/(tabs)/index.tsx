@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  ScrollView, Keyboard, Platform, ActivityIndicator, StatusBar,
+  ScrollView, Keyboard, Platform, ActivityIndicator, StatusBar, useWindowDimensions,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +34,8 @@ export default function HomeScreen() {
   const { dark } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isMobileWeb = Platform.OS === 'web' && width < 768;
 
   const [trainNumber, setTrainNumber] = useState('');
   const [error, setError] = useState('');
@@ -148,11 +150,11 @@ export default function HomeScreen() {
     return (
       <ScrollView style={{ flex: 1, backgroundColor: BRAND_BG }}>
 
-        {/* ── Hero band ────────────────────────────────────────── */}
+        {/* ── Hero band ────────────────────────────────────────────── */}
         <View style={{
           backgroundColor: BRAND_HERO_BG,
-          paddingVertical: 48,
-          paddingHorizontal: 40,
+          paddingVertical: isMobileWeb ? 24 : 48,
+          paddingHorizontal: isMobileWeb ? 20 : 40,
           borderBottomWidth: 1,
           borderBottomColor: 'rgba(0,0,0,0.06)',
         }}>
@@ -163,8 +165,8 @@ export default function HomeScreen() {
             Infofer · CFR Călători · date în timp real
           </Text>
 
-          {/* Search row */}
-          <View style={{ flexDirection: 'row', gap: 12, maxWidth: 560 }}>
+          {/* Search row — stacks vertically on narrow screens */}
+          <View style={{ flexDirection: isMobileWeb ? 'column' : 'row', gap: 12, maxWidth: isMobileWeb ? undefined : 560 }}>
             <TextInput
               style={[{
                 flex: 1,
@@ -195,6 +197,7 @@ export default function HomeScreen() {
                 backgroundColor: '#004C99',
                 borderRadius: 6,
                 paddingHorizontal: 24,
+                height: 52,
                 justifyContent: 'center',
                 alignItems: 'center',
                 flexDirection: 'row',
@@ -267,7 +270,7 @@ export default function HomeScreen() {
         </View>
 
         {/* ── Content area ────────────────────────────────────────────── */}
-        <View style={{ paddingHorizontal: 40, paddingVertical: 32 }}>
+        <View style={{ paddingHorizontal: isMobileWeb ? 16 : 40, paddingVertical: 32 }}>
 
           {/* Recent searches */}
           {recents.length > 0 && (
@@ -302,9 +305,9 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* Favorites row: trains + stations side by side */}
+          {/* Favorites — side-by-side on desktop, stacked on mobile */}
           {(favTrains.length > 0 || favStations.length > 0) && (
-            <View style={{ flexDirection: 'row', gap: 24, marginBottom: 32 }}>
+            <View style={{ flexDirection: isMobileWeb ? 'column' : 'row', gap: 24, marginBottom: 32 }}>
               {favTrains.length > 0 && (
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase', color: BRAND_SUB, marginBottom: 12 }}>{t('home.favorites')}</Text>
@@ -349,11 +352,11 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* Info cards — 3-column grid */}
+          {/* Info cards — 3-col on desktop, 1-col stack on mobile */}
           <Text style={{ fontSize: 11, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase', color: BRAND_SUB, marginBottom: 12 }}>
             {t('home.infoCard1Title') && 'Informații'}
           </Text>
-          <View style={{ flexDirection: 'row', gap: 20 }}>
+          <View style={{ flexDirection: isMobileWeb ? 'column' : 'row', gap: 20 }}>
             {[
               { icon: 'train' as const, titleKey: 'home.infoCard1Title', bodyKey: 'home.infoCard1Body', accent: BRAND_BLUE },
               { icon: 'location' as const, titleKey: 'home.infoCard2Title', bodyKey: 'home.infoCard2Body', accent: '#0066CC' },
